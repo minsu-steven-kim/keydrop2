@@ -1,0 +1,25 @@
+[package]
+name = "keydrop-desktop"
+version = "0.1.0"
+edition = "2021"
+description = "Keydrop Password Manager Desktop App"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.6", features = ["shell-open", "clipboard-write-text"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+crypto-core = { path = "../../crypto-core" }
+rusqlite = { version = "0.31", features = ["bundled"] }
+tokio = { version = "1", features = ["sync"] }
+uuid = { version = "1.0", features = ["v4"] }
+dirs = "5.0"
+thiserror = "1.0"
+base64 = "0.21"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "crypto-core",
+    "crypto-core/wasm",
+    "desktop/src-tauri",
+]

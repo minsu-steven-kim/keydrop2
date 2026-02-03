@@ -7,7 +7,7 @@
 │                              Clients                                     │
 ├──────────────────┬──────────────────────┬───────────────────────────────┤
 │  Chrome Extension│    Desktop App       │       Android App             │
-│  (Manifest V3)   │    (Electron/Tauri)  │       (Kotlin)                │
+│  (Manifest V3)   │    (Tauri + React)   │       (Kotlin) [Planned]      │
 │                  │                      │                               │
 │  - Auto-fill     │  - Vault management  │  - Biometric auth provider    │
 │  - Quick access  │  - Import/Export     │  - Autofill service           │
@@ -18,7 +18,7 @@
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         Sync Service (Cloud)                             │
+│                    Sync Service (Cloud) [Planned]                        │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
 │  │   Auth Service  │  │   Sync Engine   │  │   Encrypted Blob Store  │  │
 │  │                 │  │                 │  │                         │  │
@@ -28,6 +28,9 @@
 │  └─────────────────┘  └─────────────────┘  └─────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+> **Implementation Status**: Chrome Extension and Desktop App are implemented.
+> Android App and Sync Service are planned for future development.
 
 ## Core Components
 
@@ -39,21 +42,29 @@ Cross-platform cryptographic library used by all clients.
 ┌─────────────────────────────────────────┐
 │             Crypto Core                 │
 ├─────────────────────────────────────────┤
-│  Key Derivation                         │
+│  Key Derivation (kdf.rs)                │
 │  - Argon2id (master password → key)     │
-│  - HKDF (key → encryption keys)         │
+│  - HKDF-SHA256 (key → vault/auth keys)  │
 ├─────────────────────────────────────────┤
-│  Encryption                             │
+│  Encryption (cipher.rs)                 │
 │  - AES-256-GCM (vault items)            │
-│  - XChaCha20-Poly1305 (alternative)     │
+│  - Random nonce generation              │
 ├─────────────────────────────────────────┤
-│  Key Exchange                           │
-│  - X25519 (device pairing)              │
-│  - RSA-OAEP (legacy compatibility)      │
+│  Vault Management (vault.rs)            │
+│  - VaultItem CRUD operations            │
+│  - Search and URL matching              │
+│  - Encrypted import/export              │
+├─────────────────────────────────────────┤
+│  Password Generation (password.rs)      │
+│  - Configurable length/complexity       │
+│  - Passphrase generation                │
 └─────────────────────────────────────────┘
 ```
 
-**Implementation**: Rust library with bindings for TypeScript (WASM), Kotlin (JNI), and native desktop.
+**Implementation**: Rust library using RustCrypto crates (argon2, aes-gcm, hkdf, sha2).
+- **Native**: Used directly by Tauri desktop backend
+- **WASM**: Compiled via wasm-pack for browser extension and desktop frontend
+- **JNI**: Planned for Android (not yet implemented)
 
 ### 2. Vault Structure
 
@@ -152,20 +163,24 @@ Client A                    Server                    Client B
 ┌─────────────────────────────────────────────────────────┐
 │                    Chrome Extension                      │
 ├─────────────────────────────────────────────────────────┤
-│  Service Worker (Background)                            │
-│  - Crypto operations (WASM)                             │
-│  - Sync coordination                                    │
-│  - Message routing                                      │
+│  Service Worker (service-worker.ts)                     │
+│  - Crypto operations via WASM                           │
+│  - Message routing between components                   │
+│  - Vault state management                               │
 ├─────────────────────────────────────────────────────────┤
 │  Content Scripts                                        │
-│  - Form detection                                       │
-│  - Auto-fill injection                                  │
-│  - Save credential prompts                              │
+│  - detector.ts: Login form detection                    │
+│  - autofill.ts: Credential injection                    │
+│  - content.ts: Main content script entry                │
 ├─────────────────────────────────────────────────────────┤
-│  Popup UI (React)                                       │
-│  - Quick search                                         │
-│  - Credential display                                   │
-│  - Settings access                                      │
+│  Popup UI (Popup.tsx)                                   │
+│  - Quick credential search                              │
+│  - Credential display and copy                          │
+│  - Lock/unlock controls                                 │
+├─────────────────────────────────────────────────────────┤
+│  Shared Libraries (lib/)                                │
+│  - crypto.ts: WASM crypto wrapper                       │
+│  - storage.ts: Chrome storage abstraction               │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -173,19 +188,20 @@ Client A                    Server                    Client B
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              Desktop App (Tauri/Electron)               │
+│                  Desktop App (Tauri)                    │
 ├─────────────────────────────────────────────────────────┤
-│  Frontend (React/Vue)                                   │
-│  - Vault browser                                        │
-│  - Credential editor                                    │
-│  - Import/Export UI                                     │
-│  - Health dashboard                                     │
+│  Frontend (React + TypeScript)                          │
+│  - UnlockScreen: Master password entry                  │
+│  - VaultList: Credential browser with search            │
+│  - CredentialForm: Add/edit credentials                 │
+│  - PasswordGenerator: Password generation UI            │
+│  - SearchBar: Quick credential lookup                   │
 ├─────────────────────────────────────────────────────────┤
-│  Backend (Rust/Node)                                    │
-│  - Crypto core integration                              │
-│  - Local database (SQLCipher)                          │
-│  - File system operations                               │
-│  - IPC with browser extension                           │
+│  Backend (Rust via Tauri)                               │
+│  - Crypto core integration (native)                     │
+│  - Local storage (encrypted vault file)                 │
+│  - Tauri commands for frontend IPC                      │
+│  - State management                                     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -266,15 +282,16 @@ Master Key
 
 ## Technology Stack
 
-| Component | Technology |
-|-----------|------------|
-| Crypto Core | Rust + ring/RustCrypto |
-| Chrome Extension | TypeScript, React, WASM |
-| Desktop App | Tauri (Rust) or Electron, React |
-| Android App | Kotlin, Jetpack Compose |
-| Sync Backend | Go or Rust, PostgreSQL |
-| Local Storage | SQLCipher (encrypted SQLite) |
-| Sync Protocol | HTTPS + WebSocket (notifications) |
+| Component | Technology | Status |
+|-----------|------------|--------|
+| Crypto Core | Rust (argon2, aes-gcm, hkdf, zeroize) | Implemented |
+| WASM Bindings | wasm-bindgen, wasm-pack | Implemented |
+| Chrome Extension | TypeScript, React, Manifest V3 | Implemented |
+| Desktop App | Tauri, React, TypeScript | Implemented |
+| Android App | Kotlin, Jetpack Compose | Planned |
+| Sync Backend | Go or Rust, PostgreSQL | Planned |
+| Local Storage | Encrypted vault file (AES-256-GCM) | Implemented |
+| Sync Protocol | HTTPS + WebSocket (notifications) | Planned |
 
 ## Deployment
 

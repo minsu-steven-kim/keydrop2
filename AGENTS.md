@@ -12,12 +12,20 @@ Keydrop is a universal password manager with three client platforms (Chrome exte
 
 ```
 keydrop/
-├── crypto-core/     # Rust shared crypto library (WASM + JNI bindings)
-├── extension/       # Chrome extension (Manifest V3, TypeScript, React)
-├── desktop/         # Desktop app (Tauri, React)
-├── android/         # Android app (Kotlin, Jetpack Compose)
-├── backend/         # Sync service (Go or Rust, PostgreSQL)
-└── shared/          # Shared TypeScript types and utilities
+├── crypto-core/           # Rust shared crypto library
+│   ├── src/               # Core implementation (cipher, kdf, password, vault)
+│   ├── wasm/              # WebAssembly bindings for browser/desktop frontend
+│   └── benches/           # Performance benchmarks
+├── desktop/               # Desktop app (Tauri + React)
+│   ├── src/               # React frontend (components, hooks, lib)
+│   └── src-tauri/         # Rust backend (commands, storage, state)
+├── extension/             # Chrome extension (Manifest V3)
+│   ├── src/background/    # Service worker
+│   ├── src/content/       # Content scripts (detector, autofill)
+│   ├── src/popup/         # Popup UI (React)
+│   └── src/lib/           # Shared utilities
+├── android/               # Android app (planned - Kotlin, Jetpack Compose)
+└── backend/               # Sync service (planned - Go or Rust, PostgreSQL)
 ```
 
 ### Crypto Core
@@ -56,3 +64,49 @@ Delta-based sync with versioning. Server stores only encrypted blobs (zero-knowl
 - Chrome extension: Manifest V3 (service workers, no persistent background)
 - Android: minimum SDK 26 (Android 8.0)
 - Desktop: Windows 10+, macOS 11+, Ubuntu 20.04+
+
+## Build Commands
+
+```bash
+# Crypto core
+cd crypto-core && cargo build --release
+cd crypto-core && cargo test
+cd crypto-core && cargo bench
+
+# WASM bindings
+cd crypto-core/wasm && wasm-pack build --target web
+
+# Desktop app
+cd desktop && npm install && npm run tauri dev
+
+# Chrome extension
+cd extension && npm install && npm run build
+```
+
+## Key Files
+
+### Crypto Core
+- `crypto-core/src/lib.rs` - Public API and module exports
+- `crypto-core/src/kdf.rs` - Argon2id key derivation, HKDF key expansion
+- `crypto-core/src/cipher.rs` - AES-256-GCM encryption/decryption
+- `crypto-core/src/vault.rs` - Vault and VaultItem types, search, import/export
+- `crypto-core/src/password.rs` - Password and passphrase generation
+- `crypto-core/wasm/src/lib.rs` - WASM bindings via wasm-bindgen
+
+### Desktop
+- `desktop/src-tauri/src/commands.rs` - Tauri command handlers
+- `desktop/src-tauri/src/storage.rs` - Local vault persistence
+- `desktop/src/components/UnlockScreen.tsx` - Master password entry
+- `desktop/src/components/VaultList.tsx` - Credential list display
+- `desktop/src/components/CredentialForm.tsx` - Add/edit credentials
+- `desktop/src/components/PasswordGenerator.tsx` - Password generation UI
+- `desktop/src/lib/crypto.ts` - Frontend crypto wrapper
+
+### Extension
+- `extension/manifest.json` - Extension manifest (MV3)
+- `extension/src/background/service-worker.ts` - Background service worker
+- `extension/src/content/detector.ts` - Login form detection
+- `extension/src/content/autofill.ts` - Auto-fill injection
+- `extension/src/popup/Popup.tsx` - Quick access popup
+- `extension/src/lib/crypto.ts` - WASM crypto wrapper
+- `extension/src/lib/storage.ts` - Chrome storage abstraction

@@ -1,0 +1,46 @@
+# Rust
+target/
+Cargo.lock
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Build artifacts
+*.wasm
+pkg/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Extension build
+extension/dist/
+
+# Tauri
+desktop/src-tauri/target/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp

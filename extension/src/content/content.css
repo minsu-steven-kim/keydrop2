@@ -1,0 +1,151 @@
+/* Keydrop content script styles */
+
+.keydrop-autofill-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 10000;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.keydrop-autofill-icon:hover {
+  opacity: 1;
+}
+
+.keydrop-dropdown {
+  position: fixed;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.keydrop-dropdown-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.keydrop-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.keydrop-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.keydrop-dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.keydrop-dropdown-item-name {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.keydrop-dropdown-item-username {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Save prompt notification */
+.keydrop-save-prompt {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #1a1a2e;
+  color: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 10002;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-width: 350px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.keydrop-save-prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.keydrop-save-prompt-content {
+  margin-bottom: 16px;
+}
+
+.keydrop-save-prompt-field {
+  margin-bottom: 8px;
+}
+
+.keydrop-save-prompt-label {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.keydrop-save-prompt-value {
+  font-size: 14px;
+}
+
+.keydrop-save-prompt-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.keydrop-save-prompt-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.keydrop-save-prompt-btn-primary {
+  background: #e94560;
+  color: white;
+}
+
+.keydrop-save-prompt-btn-primary:hover {
+  background: #ff6b6b;
+}
+
+.keydrop-save-prompt-btn-secondary {
+  background: #333;
+  color: white;
+}
+
+.keydrop-save-prompt-btn-secondary:hover {
+  background: #444;
+}
