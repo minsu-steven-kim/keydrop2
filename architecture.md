@@ -7,7 +7,7 @@
 │                              Clients                                     │
 ├──────────────────┬──────────────────────┬───────────────────────────────┤
 │  Chrome Extension│    Desktop App       │       Android App             │
-│  (Manifest V3)   │    (Tauri + React)   │       (Kotlin) [Planned]      │
+│  (Manifest V3)   │    (Tauri + React)   │       (Kotlin + Compose)      │
 │                  │                      │                               │
 │  - Auto-fill     │  - Vault management  │  - Biometric auth provider    │
 │  - Quick access  │  - Import/Export     │  - Autofill service           │
@@ -18,7 +18,7 @@
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    Sync Service (Cloud) [Planned]                        │
+│                    Sync Service (Cloud) - Rust + Axum                    │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
 │  │   Auth Service  │  │   Sync Engine   │  │   Encrypted Blob Store  │  │
 │  │                 │  │                 │  │                         │  │
@@ -29,8 +29,7 @@
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-> **Implementation Status**: Chrome Extension and Desktop App are implemented.
-> Android App and Sync Service are planned for future development.
+> **Implementation Status**: All platforms are implemented - Chrome Extension, Desktop App, Android App, and Sync Backend.
 
 ## Core Components
 
@@ -62,9 +61,9 @@ Cross-platform cryptographic library used by all clients.
 ```
 
 **Implementation**: Rust library using RustCrypto crates (argon2, aes-gcm, hkdf, sha2).
-- **Native**: Used directly by Tauri desktop backend
+- **Native**: Used directly by Tauri desktop backend and sync server
 - **WASM**: Compiled via wasm-pack for browser extension and desktop frontend
-- **JNI**: Planned for Android (not yet implemented)
+- **UniFFI**: Generated Kotlin bindings for Android via Mozilla's uniffi-rs
 
 ### 2. Vault Structure
 
@@ -286,12 +285,14 @@ Master Key
 |-----------|------------|--------|
 | Crypto Core | Rust (argon2, aes-gcm, hkdf, zeroize) | Implemented |
 | WASM Bindings | wasm-bindgen, wasm-pack | Implemented |
+| UniFFI Bindings | uniffi-rs (Kotlin generation) | Implemented |
 | Chrome Extension | TypeScript, React, Manifest V3 | Implemented |
 | Desktop App | Tauri, React, TypeScript | Implemented |
-| Android App | Kotlin, Jetpack Compose | Planned |
-| Sync Backend | Go or Rust, PostgreSQL | Planned |
+| Android App | Kotlin, Jetpack Compose, Hilt, Room | Implemented |
+| Sync Backend | Rust, Axum, SQLx, PostgreSQL | Implemented |
+| Blob Storage | S3-compatible (AWS S3, MinIO, R2) | Implemented |
 | Local Storage | Encrypted vault file (AES-256-GCM) | Implemented |
-| Sync Protocol | HTTPS + WebSocket (notifications) | Planned |
+| Sync Protocol | HTTPS + WebSocket (notifications) | Implemented |
 
 ## Deployment
 

@@ -11,8 +11,8 @@ Keydrop is a universal password manager with a unified password store accessible
 | Crypto Core | Implemented |
 | Desktop App | Implemented |
 | Chrome Extension | Implemented |
-| Android App | Planned |
-| Sync Backend | Planned |
+| Android App | Implemented |
+| Sync Backend | Implemented |
 
 ## Functional Requirements
 
@@ -37,9 +37,9 @@ Keydrop is a universal password manager with a unified password store accessible
 
 ### Synchronization
 
-- **FR-020**: Real-time sync across all connected devices
-- **FR-021**: Offline access with local encrypted cache
-- **FR-022**: Conflict resolution for concurrent edits
+- **FR-020**: Real-time sync across all connected devices ✓
+- **FR-021**: Offline access with local encrypted cache ✓
+- **FR-022**: Conflict resolution for concurrent edits ✓
 - **FR-023**: Sync status indicators
 
 ### Platform-Specific
@@ -51,11 +51,11 @@ Keydrop is a universal password manager with a unified password store accessible
 - **FR-033**: Site-specific settings (never save, always auto-fill)
 
 #### Android App
-- **FR-040**: Biometric unlock (fingerprint, face)
-- **FR-041**: Android Autofill Framework integration
-- **FR-042**: Secure keyboard for credential input
-- **FR-043**: Widget for quick access
-- **FR-044**: Act as biometric authenticator for other Keydrop clients
+- **FR-040**: Biometric unlock (fingerprint, face) ✓
+- **FR-041**: Android Autofill Framework integration ✓
+- **FR-042**: Secure keyboard for credential input ✓
+- **FR-043**: Widget for quick access ✓
+- **FR-044**: Act as biometric authenticator for other Keydrop clients ✓
 
 #### Desktop Application
 - **FR-050**: Full CRUD operations on credentials ✓
@@ -72,10 +72,10 @@ Keydrop is a universal password manager with a unified password store accessible
 - **NFR-001**: AES-256 encryption for all stored data ✓
 - **NFR-002**: Zero-knowledge architecture (server never sees plaintext) ✓
 - **NFR-003**: PBKDF2/Argon2 key derivation from master password ✓ (Argon2id)
-- **NFR-004**: End-to-end encryption for sync
+- **NFR-004**: End-to-end encryption for sync ✓
 - **NFR-005**: Memory protection (clear sensitive data after use) ✓ (zeroize crate)
 - **NFR-006**: Secure random number generation for passwords ✓
-- **NFR-007**: Certificate pinning for API communication
+- **NFR-007**: Certificate pinning for API communication ✓
 
 ### Performance
 

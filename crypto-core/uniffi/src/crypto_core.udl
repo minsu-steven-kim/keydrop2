@@ -1,0 +1,111 @@
+namespace crypto_core {
+    // Salt generation
+    [Throws=CryptoError]
+    string generate_salt();
+
+    // Key derivation
+    [Throws=CryptoError]
+    string derive_master_key(string password, string salt_base64);
+
+    [Throws=CryptoError]
+    KeySet derive_keys(string master_key_base64);
+
+    // Encryption/Decryption
+    [Throws=CryptoError]
+    string encrypt(string plaintext, string key_base64);
+
+    [Throws=CryptoError]
+    string decrypt(string encrypted_base64, string key_base64);
+
+    // Password generation
+    [Throws=CryptoError]
+    string generate_password(PasswordOptions options);
+
+    [Throws=CryptoError]
+    string generate_passphrase(u32 word_count, string separator);
+
+    // Entropy calculation
+    f64 calculate_entropy(PasswordOptions options);
+};
+
+[Error]
+enum CryptoError {
+    "KeyDerivation",
+    "Encryption",
+    "Decryption",
+    "InvalidKeyLength",
+    "InvalidInput",
+    "Serialization",
+};
+
+dictionary KeySet {
+    string vault_key;
+    string auth_key;
+    string sharing_key;
+};
+
+dictionary PasswordOptions {
+    u32 length;
+    boolean lowercase;
+    boolean uppercase;
+    boolean digits;
+    boolean symbols;
+    boolean exclude_ambiguous;
+    string exclude_chars;
+};
+
+dictionary VaultItemData {
+    string id;
+    string name;
+    string? url;
+    string username;
+    string password;
+    string? notes;
+    string? category;
+    boolean favorite;
+    i64 created_at;
+    i64 modified_at;
+};
+
+interface Vault {
+    constructor();
+
+    [Throws=CryptoError]
+    string add_item(VaultItemData item);
+
+    VaultItemData? get_item(string id);
+
+    [Throws=CryptoError]
+    void update_item(string id, VaultItemData item);
+
+    [Throws=CryptoError]
+    VaultItemData? remove_item(string id);
+
+    sequence<VaultItemData> get_all_items();
+
+    sequence<VaultItemData> search(string query);
+
+    sequence<VaultItemData> find_by_url(string url);
+
+    sequence<VaultItemData> get_favorites();
+
+    sequence<string> get_categories();
+
+    [Throws=CryptoError]
+    void add_category(string category);
+
+    [Throws=CryptoError]
+    string export_encrypted(string vault_key_base64);
+
+    [Throws=CryptoError, Name=import_encrypted]
+    constructor(string encrypted_base64, string vault_key_base64);
+
+    string to_json();
+
+    [Throws=CryptoError, Name=from_json]
+    constructor(string json);
+
+    u32 len();
+
+    boolean is_empty();
+};

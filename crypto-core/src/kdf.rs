@@ -22,8 +22,27 @@ impl MasterKey {
         Self { key: bytes }
     }
 
+    /// Create from a byte slice (validates length)
+    pub fn from_slice(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() != MASTER_KEY_SIZE {
+            return Err(CryptoError::InvalidKeyLength {
+                expected: MASTER_KEY_SIZE,
+                got: bytes.len(),
+            });
+        }
+        let mut key = [0u8; MASTER_KEY_SIZE];
+        key.copy_from_slice(bytes);
+        Ok(Self { key })
+    }
+
     pub fn as_bytes(&self) -> &[u8; MASTER_KEY_SIZE] {
         &self.key
+    }
+
+    /// Encode master key as base64
+    pub fn to_base64(&self) -> String {
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        STANDARD.encode(self.key)
     }
 }
 
@@ -60,8 +79,31 @@ impl Salt {
         Self { bytes }
     }
 
+    /// Create salt from base64 string
+    pub fn from_base64(s: &str) -> Result<Self> {
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        let bytes = STANDARD
+            .decode(s)
+            .map_err(|e| CryptoError::Deserialization(format!("Invalid base64: {}", e)))?;
+        if bytes.len() != SALT_SIZE {
+            return Err(CryptoError::InvalidKeyLength {
+                expected: SALT_SIZE,
+                got: bytes.len(),
+            });
+        }
+        let mut arr = [0u8; SALT_SIZE];
+        arr.copy_from_slice(&bytes);
+        Ok(Self { bytes: arr })
+    }
+
     pub fn as_bytes(&self) -> &[u8; SALT_SIZE] {
         &self.bytes
+    }
+
+    /// Encode salt as base64
+    pub fn to_base64(&self) -> String {
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        STANDARD.encode(self.bytes)
     }
 }
 

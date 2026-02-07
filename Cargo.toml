@@ -3,5 +3,7 @@ resolver = "2"
 members = [
     "crypto-core",
     "crypto-core/wasm",
+    "crypto-core/uniffi",
     "desktop/src-tauri",
+    "backend",
 ]

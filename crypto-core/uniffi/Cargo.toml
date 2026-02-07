@@ -1,0 +1,22 @@
+[package]
+name = "crypto-core-uniffi"
+version = "0.1.0"
+edition = "2021"
+description = "UniFFI bindings for crypto-core (Android/iOS)"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "crypto_core_uniffi"
+
+[dependencies]
+crypto-core = { path = ".." }
+uniffi = { version = "0.25", features = ["cli"] }
+base64 = "0.21"
+thiserror = "1.0"
+
+[build-dependencies]
+uniffi = { version = "0.25", features = ["build"] }
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"

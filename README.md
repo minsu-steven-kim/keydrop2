@@ -10,7 +10,8 @@ Keydrop is a universal password manager that provides encrypted credential stora
 
 - **Desktop App** - Full-featured vault management (Windows, macOS, Linux)
 - **Chrome Extension** - Auto-fill and quick access in the browser
-- **Android App** - Mobile access with biometric authentication (planned)
+- **Android App** - Mobile access with biometric authentication
+- **Sync Backend** - Zero-knowledge sync server (Rust + PostgreSQL)
 
 ## Project Structure
 
@@ -18,7 +19,8 @@ Keydrop is a universal password manager that provides encrypted credential stora
 keydrop/
 ├── crypto-core/          # Rust cryptographic library
 │   ├── src/              # Core crypto implementation
-│   └── wasm/             # WebAssembly bindings
+│   ├── wasm/             # WebAssembly bindings
+│   └── uniffi/           # UniFFI bindings for Android/iOS
 ├── desktop/              # Tauri desktop application
 │   ├── src/              # React frontend
 │   └── src-tauri/        # Rust backend
@@ -26,6 +28,11 @@ keydrop/
 │   ├── src/background/   # Service worker
 │   ├── src/content/      # Content scripts
 │   └── src/popup/        # Popup UI
+├── android/              # Android app (Kotlin + Jetpack Compose)
+│   └── app/              # Main application module
+├── backend/              # Sync backend (Rust + Axum)
+│   ├── src/              # API, auth, sync, blob modules
+│   └── migrations/       # PostgreSQL migrations
 └── docs/
     ├── architecture.md   # System architecture
     └── requirements.md   # Functional requirements
@@ -91,6 +98,28 @@ npm run build
 # Load dist/ folder as unpacked extension in Chrome
 ```
 
+#### Sync Backend
+
+```bash
+cd backend
+# Requires PostgreSQL and S3-compatible storage
+export DATABASE_URL=postgres://keydrop:keydrop@localhost/keydrop
+cargo run
+```
+
+#### Android App
+
+```bash
+cd android
+# Build native crypto libraries first
+cd ../crypto-core/uniffi
+cargo ndk -t arm64-v8a -o ../../android/app/src/main/jniLibs build --release
+
+# Build app
+cd ../../android
+./gradlew assembleDebug
+```
+
 ## Development
 
 ### Running Tests
@@ -111,12 +140,16 @@ cargo bench
 | Crypto Core | Rust, argon2, aes-gcm, hkdf |
 | Desktop | Tauri, React, TypeScript |
 | Extension | Chrome Manifest V3, TypeScript, React |
+| Android | Kotlin, Jetpack Compose, Hilt, Room |
+| Backend | Rust, Axum, SQLx, PostgreSQL |
+| Blob Storage | S3-compatible (AWS S3, MinIO, R2) |
 | Local Storage | SQLCipher (encrypted SQLite) |
 
 ## Documentation
 
 - [Architecture](architecture.md) - System design and component details
 - [Requirements](requirements.md) - Functional and non-functional requirements
+- [Deployment](DEPLOYMENT.md) - Production deployment guide
 - [AGENTS.md](AGENTS.md) - Guidelines for AI coding assistants
 
 ## License

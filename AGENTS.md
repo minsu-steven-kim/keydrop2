@@ -15,6 +15,7 @@ keydrop/
 ├── crypto-core/           # Rust shared crypto library
 │   ├── src/               # Core implementation (cipher, kdf, password, vault)
 │   ├── wasm/              # WebAssembly bindings for browser/desktop frontend
+│   ├── uniffi/            # UniFFI bindings for Android/iOS
 │   └── benches/           # Performance benchmarks
 ├── desktop/               # Desktop app (Tauri + React)
 │   ├── src/               # React frontend (components, hooks, lib)
@@ -24,16 +25,19 @@ keydrop/
 │   ├── src/content/       # Content scripts (detector, autofill)
 │   ├── src/popup/         # Popup UI (React)
 │   └── src/lib/           # Shared utilities
-├── android/               # Android app (planned - Kotlin, Jetpack Compose)
-└── backend/               # Sync service (planned - Go or Rust, PostgreSQL)
+├── android/               # Android app (Kotlin, Jetpack Compose)
+│   └── app/               # Main application module
+└── backend/               # Sync backend (Rust + Axum, PostgreSQL)
+    ├── src/               # API, auth, sync, blob modules
+    └── migrations/        # PostgreSQL schema migrations
 ```
 
 ### Crypto Core
 
 All clients use the same Rust crypto library with platform-specific bindings:
 - **WASM** for Chrome extension and desktop frontend
-- **JNI** for Android
-- **Native** for Tauri backend
+- **UniFFI** for Android (generates Kotlin bindings)
+- **Native** for Tauri backend and sync server
 
 Key algorithms: Argon2id (key derivation), AES-256-GCM (encryption), X25519 (key exchange), HKDF (key hierarchy).
 
@@ -76,11 +80,20 @@ cd crypto-core && cargo bench
 # WASM bindings
 cd crypto-core/wasm && wasm-pack build --target web
 
+# UniFFI bindings (for Android)
+cd crypto-core/uniffi && cargo build --release
+
 # Desktop app
 cd desktop && npm install && npm run tauri dev
 
 # Chrome extension
 cd extension && npm install && npm run build
+
+# Sync backend
+cd backend && cargo run
+
+# Android app
+cd android && ./gradlew assembleDebug
 ```
 
 ## Key Files
@@ -110,3 +123,29 @@ cd extension && npm install && npm run build
 - `extension/src/popup/Popup.tsx` - Quick access popup
 - `extension/src/lib/crypto.ts` - WASM crypto wrapper
 - `extension/src/lib/storage.ts` - Chrome storage abstraction
+
+### Backend
+- `backend/src/main.rs` - Server entry point, Axum router setup
+- `backend/src/lib.rs` - Library exports, AppState definition
+- `backend/src/api/auth.rs` - Register, login, refresh token endpoints
+- `backend/src/api/sync.rs` - Pull/push sync endpoints, WebSocket handler
+- `backend/src/api/devices.rs` - Device management, biometric auth requests
+- `backend/src/auth/jwt.rs` - JWT generation and validation
+- `backend/src/db/models.rs` - SQLx database models
+- `backend/src/blob/mod.rs` - S3-compatible blob storage
+- `backend/src/sync/conflict.rs` - Last-write-wins conflict resolution
+- `backend/migrations/` - PostgreSQL schema migrations
+
+### Android
+- `android/app/build.gradle.kts` - App configuration with Compose, Hilt, Room
+- `android/app/src/main/java/com/keydrop/KeydropApplication.kt` - Hilt application
+- `android/app/src/main/java/com/keydrop/ui/` - Jetpack Compose screens
+- `android/app/src/main/java/com/keydrop/data/` - Room database, repositories
+- `android/app/src/main/java/com/keydrop/sync/` - SyncManager, SyncWorker
+- `android/app/src/main/java/com/keydrop/biometric/` - BiometricManager
+- `android/app/src/main/java/com/keydrop/autofill/` - Android Autofill Service
+- `android/app/src/main/java/com/keydrop/widget/` - Quick access widget
+
+### UniFFI Bindings
+- `crypto-core/uniffi/src/lib.rs` - UniFFI bindings wrapping crypto-core
+- `crypto-core/uniffi/src/crypto_core.udl` - UniFFI interface definition
