@@ -1,5 +1,7 @@
 # Keydrop
 
+[![CI](https://github.com/minsu-steven-kim/keydrop2/actions/workflows/ci.yml/badge.svg)](https://github.com/minsu-steven-kim/keydrop2/actions/workflows/ci.yml)
+
 A secure, cross-platform password manager with zero-knowledge architecture.
 
 ## Overview
@@ -144,6 +146,26 @@ cargo bench
 | Backend | Rust, Axum, SQLx, PostgreSQL |
 | Blob Storage | S3-compatible (AWS S3, MinIO, R2) |
 | Local Storage | SQLCipher (encrypted SQLite) |
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment.
+
+### Workflows
+
+- **CI** (`ci.yml`) - Runs on every push/PR: tests, builds all platforms
+- **Release** (`release.yml`) - Triggered by version tags: builds releases, deploys backend
+
+### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `TAURI_SIGNING_PRIVATE_KEY` | Tauri app signing key |
+| `ANDROID_KEYSTORE` | Base64-encoded Android keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Key alias in keystore |
+| `ANDROID_KEY_PASSWORD` | Key password |
+| `FLY_API_TOKEN` | Fly.io API token for backend deployment |
 
 ## Documentation
 
