@@ -163,11 +163,12 @@ impl Storage {
         }
     }
 
-    /// Delete vault (for testing/reset)
-    #[allow(dead_code)]
+    /// Delete vault (for remote wipe/reset)
     pub fn delete_vault(&self) -> Result<()> {
         self.conn
             .execute("DELETE FROM vault_meta WHERE id = 1", [])?;
+        self.conn
+            .execute("DELETE FROM settings", [])?;
         Ok(())
     }
 }

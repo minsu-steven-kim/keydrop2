@@ -4,6 +4,7 @@ use crate::AppState;
 
 pub mod auth;
 pub mod devices;
+pub mod emergency;
 pub mod sync;
 
 pub fn router() -> Router<AppState> {
@@ -12,6 +13,7 @@ pub fn router() -> Router<AppState> {
         .nest("/auth", auth::router())
         .nest("/sync", sync::router())
         .nest("/devices", devices::router())
+        .nest("/emergency", emergency::router())
 }
 
 async fn health_check() -> &'static str {

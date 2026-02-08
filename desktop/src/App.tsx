@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useVault } from './hooks/useVault';
-import { VaultItem } from './hooks/useTauri';
+import { useSync } from './hooks/useSync';
+import { VaultItem, RemoteCommand, tauri } from './hooks/useTauri';
 import UnlockScreen from './components/UnlockScreen';
 import VaultList from './components/VaultList';
 import CredentialForm from './components/CredentialForm';
 import SearchBar from './components/SearchBar';
+import SyncStatusIndicator from './components/SyncStatusIndicator';
 
 const icons = {
   list: <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>,
@@ -38,6 +40,17 @@ function App() {
     search,
     clearError,
   } = useVault();
+
+  const handleRemoteCommand = useCallback(async (command: RemoteCommand) => {
+    if (command.command_type === 'lock') {
+      await lock();
+    } else if (command.command_type === 'wipe') {
+      await tauri.wipeVault();
+      window.location.reload();
+    }
+  }, [lock]);
+
+  const sync = useSync(handleRemoteCommand);
 
   const [view, setView] = useState<View>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -153,11 +166,17 @@ function App() {
           <h1 className="vault-title">
             {view === 'favorites' ? 'Favorites' : 'All Items'}
           </h1>
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search vault..."
-          />
+          <div className="vault-header-actions">
+            <SyncStatusIndicator
+              status={sync.status}
+              onSyncClick={sync.triggerSync}
+            />
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search vault..."
+            />
+          </div>
         </div>
 
         {error && (

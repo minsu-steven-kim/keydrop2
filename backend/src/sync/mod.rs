@@ -30,6 +30,18 @@ pub enum SyncNotificationType {
     AuthRequestPending,
     /// Auth request responded
     AuthRequestResponded,
+    /// Emergency contact accepted invitation
+    EmergencyContactAccepted,
+    /// Emergency access requested
+    EmergencyAccessRequested,
+    /// Emergency access approved
+    EmergencyAccessApproved,
+    /// Emergency access denied
+    EmergencyAccessDenied,
+    /// Remote lock command issued
+    RemoteLockCommand,
+    /// Remote wipe command issued
+    RemoteWipeCommand,
 }
 
 /// Item change to be synced

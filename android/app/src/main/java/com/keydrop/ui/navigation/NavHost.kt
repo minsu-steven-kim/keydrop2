@@ -9,6 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.keydrop.ui.screens.DevicesScreen
+import com.keydrop.ui.screens.EmergencyAccessScreen
 import com.keydrop.ui.screens.ItemDetailScreen
 import com.keydrop.ui.screens.ItemEditScreen
 import com.keydrop.ui.screens.PasswordGeneratorScreen
@@ -29,6 +31,8 @@ sealed class Screen(val route: String) {
     object ItemCreate : Screen("item/new")
     object PasswordGenerator : Screen("password-generator")
     object Settings : Screen("settings")
+    object Devices : Screen("devices")
+    object EmergencyAccess : Screen("emergency-access")
 }
 
 @Composable
@@ -130,7 +134,25 @@ fun KeydropNavHost() {
                     navController.navigate(Screen.Unlock.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onDevicesClick = {
+                    navController.navigate(Screen.Devices.route)
+                },
+                onEmergencyAccessClick = {
+                    navController.navigate(Screen.EmergencyAccess.route)
                 }
+            )
+        }
+
+        composable(Screen.Devices.route) {
+            DevicesScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.EmergencyAccess.route) {
+            EmergencyAccessScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

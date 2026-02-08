@@ -28,6 +28,27 @@ export interface PasswordOptions {
   exclude_chars?: string;
 }
 
+export type SyncStatusState = 'Idle' | 'Syncing' | 'Error' | 'Offline';
+
+export interface SyncStatus {
+  state: SyncStatusState;
+  last_sync_time: number | null;
+  error: string | null;
+  pending_changes: number;
+}
+
+export interface RemoteCommand {
+  id: string;
+  command_type: string;
+  created_at: number;
+}
+
+export interface EnableSyncRequest {
+  server_url: string;
+  access_token: string;
+  device_id: string;
+}
+
 export const tauri = {
   // Vault status
   getVaultStatus: () => invoke<VaultStatus>('get_vault_status'),
@@ -57,4 +78,15 @@ export const tauri = {
   setAutoLockTimeout: (timeout: number) =>
     invoke<void>('set_auto_lock_timeout', { timeout }),
   checkAutoLock: () => invoke<boolean>('check_auto_lock'),
+
+  // Sync
+  getSyncStatus: () => invoke<SyncStatus>('get_sync_status'),
+  enableSync: (request: EnableSyncRequest) =>
+    invoke<void>('enable_sync', { request }),
+  disableSync: () => invoke<void>('disable_sync'),
+  triggerSync: () => invoke<void>('trigger_sync'),
+  checkRemoteCommands: () => invoke<RemoteCommand[]>('check_remote_commands'),
+
+  // Wipe
+  wipeVault: () => invoke<void>('wipe_vault'),
 };

@@ -402,3 +402,402 @@ pub async fn update_auth_request_response(
 
     Ok(())
 }
+
+// ============ Emergency Contact Queries ============
+
+pub async fn create_emergency_contact(
+    pool: &PgPool,
+    user_id: Uuid,
+    contact_email: &str,
+    contact_name: Option<&str>,
+    waiting_period_hours: i32,
+    invitation_token: &str,
+    invitation_expires_at: DateTime<Utc>,
+) -> Result<EmergencyContact> {
+    let row = sqlx::query_as::<_, EmergencyContactRow>(
+        r#"
+        INSERT INTO emergency_contacts (user_id, contact_email, contact_name, waiting_period_hours, invitation_token, invitation_expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+        "#,
+    )
+    .bind(user_id)
+    .bind(contact_email)
+    .bind(contact_name)
+    .bind(waiting_period_hours)
+    .bind(invitation_token)
+    .bind(invitation_expires_at)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(EmergencyContact::from(row))
+}
+
+pub async fn get_emergency_contact_by_id(
+    pool: &PgPool,
+    contact_id: Uuid,
+) -> Result<Option<EmergencyContact>> {
+    let row = sqlx::query_as::<_, EmergencyContactRow>(
+        r#"
+        SELECT * FROM emergency_contacts WHERE id = $1
+        "#,
+    )
+    .bind(contact_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(EmergencyContact::from))
+}
+
+pub async fn get_emergency_contacts_by_user(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Vec<EmergencyContact>> {
+    let rows = sqlx::query_as::<_, EmergencyContactRow>(
+        r#"
+        SELECT * FROM emergency_contacts WHERE user_id = $1 ORDER BY created_at DESC
+        "#,
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(EmergencyContact::from).collect())
+}
+
+pub async fn get_emergency_contacts_for_contact_user(
+    pool: &PgPool,
+    contact_user_id: Uuid,
+) -> Result<Vec<EmergencyContact>> {
+    let rows = sqlx::query_as::<_, EmergencyContactRow>(
+        r#"
+        SELECT * FROM emergency_contacts WHERE contact_user_id = $1 ORDER BY created_at DESC
+        "#,
+    )
+    .bind(contact_user_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(EmergencyContact::from).collect())
+}
+
+pub async fn get_emergency_contact_by_token(
+    pool: &PgPool,
+    token: &str,
+) -> Result<Option<EmergencyContact>> {
+    let row = sqlx::query_as::<_, EmergencyContactRow>(
+        r#"
+        SELECT * FROM emergency_contacts WHERE invitation_token = $1 AND invitation_expires_at > NOW()
+        "#,
+    )
+    .bind(token)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(EmergencyContact::from))
+}
+
+pub async fn accept_emergency_contact_invitation(
+    pool: &PgPool,
+    contact_id: Uuid,
+    contact_user_id: Uuid,
+) -> Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE emergency_contacts
+        SET status = 'accepted', contact_user_id = $2, accepted_at = NOW(), invitation_token = NULL
+        WHERE id = $1
+        "#,
+    )
+    .bind(contact_id)
+    .bind(contact_user_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn revoke_emergency_contact(pool: &PgPool, contact_id: Uuid) -> Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE emergency_contacts SET status = 'revoked' WHERE id = $1
+        "#,
+    )
+    .bind(contact_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delete_emergency_contact(pool: &PgPool, contact_id: Uuid) -> Result<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM emergency_contacts WHERE id = $1
+        "#,
+    )
+    .bind(contact_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+// ============ Emergency Access Request Queries ============
+
+pub async fn create_emergency_access_request(
+    pool: &PgPool,
+    emergency_contact_id: Uuid,
+    request_reason: Option<&str>,
+    waiting_period_ends_at: DateTime<Utc>,
+) -> Result<EmergencyAccessRequest> {
+    let row = sqlx::query_as::<_, EmergencyAccessRequestRow>(
+        r#"
+        INSERT INTO emergency_access_requests (emergency_contact_id, request_reason, waiting_period_ends_at)
+        VALUES ($1, $2, $3)
+        RETURNING *
+        "#,
+    )
+    .bind(emergency_contact_id)
+    .bind(request_reason)
+    .bind(waiting_period_ends_at)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(EmergencyAccessRequest::from(row))
+}
+
+pub async fn get_emergency_access_request_by_id(
+    pool: &PgPool,
+    request_id: Uuid,
+) -> Result<Option<EmergencyAccessRequest>> {
+    let row = sqlx::query_as::<_, EmergencyAccessRequestRow>(
+        r#"
+        SELECT * FROM emergency_access_requests WHERE id = $1
+        "#,
+    )
+    .bind(request_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(EmergencyAccessRequest::from))
+}
+
+pub async fn get_pending_access_requests_for_user(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Vec<EmergencyAccessRequest>> {
+    let rows = sqlx::query_as::<_, EmergencyAccessRequestRow>(
+        r#"
+        SELECT ear.* FROM emergency_access_requests ear
+        JOIN emergency_contacts ec ON ear.emergency_contact_id = ec.id
+        WHERE ec.user_id = $1 AND ear.status = 'pending'
+        ORDER BY ear.created_at DESC
+        "#,
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(EmergencyAccessRequest::from).collect())
+}
+
+pub async fn get_access_requests_by_contact(
+    pool: &PgPool,
+    emergency_contact_id: Uuid,
+) -> Result<Vec<EmergencyAccessRequest>> {
+    let rows = sqlx::query_as::<_, EmergencyAccessRequestRow>(
+        r#"
+        SELECT * FROM emergency_access_requests WHERE emergency_contact_id = $1 ORDER BY created_at DESC
+        "#,
+    )
+    .bind(emergency_contact_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(EmergencyAccessRequest::from).collect())
+}
+
+pub async fn deny_emergency_access_request(pool: &PgPool, request_id: Uuid) -> Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE emergency_access_requests SET status = 'denied', denied_at = NOW() WHERE id = $1
+        "#,
+    )
+    .bind(request_id)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn approve_emergency_access_request(
+    pool: &PgPool,
+    request_id: Uuid,
+    vault_key_encrypted: &str,
+) -> Result<()> {
+    sqlx::query(
+        r#"
+        UPDATE emergency_access_requests
+        SET status = 'approved', approved_at = NOW(), vault_key_encrypted = $2
+        WHERE id = $1
+        "#,
+    )
+    .bind(request_id)
+    .bind(vault_key_encrypted)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn expire_pending_access_requests(pool: &PgPool) -> Result<u64> {
+    let result = sqlx::query(
+        r#"
+        UPDATE emergency_access_requests
+        SET status = 'expired'
+        WHERE status = 'pending' AND waiting_period_ends_at <= NOW()
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
+}
+
+// ============ Emergency Access Log Queries ============
+
+pub async fn create_emergency_access_log(
+    pool: &PgPool,
+    user_id: Uuid,
+    emergency_contact_id: Option<Uuid>,
+    action: &str,
+    details: Option<serde_json::Value>,
+    ip_address: Option<&str>,
+) -> Result<EmergencyAccessLog> {
+    let log = sqlx::query_as::<_, EmergencyAccessLog>(
+        r#"
+        INSERT INTO emergency_access_logs (user_id, emergency_contact_id, action, details, ip_address)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+        "#,
+    )
+    .bind(user_id)
+    .bind(emergency_contact_id)
+    .bind(action)
+    .bind(details)
+    .bind(ip_address)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(log)
+}
+
+pub async fn get_emergency_access_logs_for_user(
+    pool: &PgPool,
+    user_id: Uuid,
+    limit: i64,
+) -> Result<Vec<EmergencyAccessLog>> {
+    let logs = sqlx::query_as::<_, EmergencyAccessLog>(
+        r#"
+        SELECT * FROM emergency_access_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2
+        "#,
+    )
+    .bind(user_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(logs)
+}
+
+// ============ Remote Command Queries ============
+
+pub async fn create_remote_command(
+    pool: &PgPool,
+    user_id: Uuid,
+    target_device_id: Uuid,
+    command_type: RemoteCommandType,
+    issued_by_device_id: Option<Uuid>,
+    issued_by_emergency_contact_id: Option<Uuid>,
+) -> Result<RemoteCommand> {
+    let command_type_str: String = command_type.into();
+    let row = sqlx::query_as::<_, RemoteCommandRow>(
+        r#"
+        INSERT INTO remote_commands (user_id, target_device_id, command_type, issued_by_device_id, issued_by_emergency_contact_id)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+        "#,
+    )
+    .bind(user_id)
+    .bind(target_device_id)
+    .bind(command_type_str)
+    .bind(issued_by_device_id)
+    .bind(issued_by_emergency_contact_id)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(RemoteCommand::from(row))
+}
+
+pub async fn get_pending_commands_for_device(
+    pool: &PgPool,
+    device_id: Uuid,
+) -> Result<Vec<RemoteCommand>> {
+    let rows = sqlx::query_as::<_, RemoteCommandRow>(
+        r#"
+        SELECT * FROM remote_commands
+        WHERE target_device_id = $1 AND status = 'pending'
+        ORDER BY created_at ASC
+        "#,
+    )
+    .bind(device_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(RemoteCommand::from).collect())
+}
+
+pub async fn update_command_status(
+    pool: &PgPool,
+    command_id: Uuid,
+    status: RemoteCommandStatus,
+) -> Result<()> {
+    let status_str: String = status.into();
+    let executed_at = if status == RemoteCommandStatus::Executed {
+        Some(Utc::now())
+    } else {
+        None
+    };
+
+    sqlx::query(
+        r#"
+        UPDATE remote_commands SET status = $2, executed_at = $3 WHERE id = $1
+        "#,
+    )
+    .bind(command_id)
+    .bind(status_str)
+    .bind(executed_at)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn get_commands_for_user(
+    pool: &PgPool,
+    user_id: Uuid,
+    limit: i64,
+) -> Result<Vec<RemoteCommand>> {
+    let rows = sqlx::query_as::<_, RemoteCommandRow>(
+        r#"
+        SELECT * FROM remote_commands WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2
+        "#,
+    )
+    .bind(user_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows.into_iter().map(RemoteCommand::from).collect())
+}

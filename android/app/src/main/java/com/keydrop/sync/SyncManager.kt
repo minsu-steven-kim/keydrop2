@@ -25,7 +25,8 @@ data class SyncState(
     val isSyncing: Boolean = false,
     val lastSyncVersion: Long = 0,
     val lastSyncTimestamp: Long? = null,
-    val error: String? = null
+    val error: String? = null,
+    val pendingCommand: RemoteCommand? = null
 )
 
 @Singleton
@@ -43,9 +44,20 @@ class SyncManager @Inject constructor(
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
 
+    // Callback for handling remote commands
+    private var onLockCommand: (() -> Unit)? = null
+    private var onWipeCommand: (() -> Unit)? = null
+
     companion object {
         private const val SYNC_WORK_NAME = "keydrop_sync"
+        private const val COMMAND_CHECK_WORK_NAME = "keydrop_command_check"
         private const val SYNC_INTERVAL_MINUTES = 15L
+        private const val COMMAND_CHECK_INTERVAL_MINUTES = 5L
+    }
+
+    fun setCommandHandlers(onLock: () -> Unit, onWipe: () -> Unit) {
+        onLockCommand = onLock
+        onWipeCommand = onWipe
     }
 
     suspend fun initialize() {
@@ -85,6 +97,43 @@ class SyncManager @Inject constructor(
             ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )
+    }
+
+    suspend fun checkRemoteCommands() {
+        if (!_syncState.value.isEnabled) return
+
+        try {
+            val commands = syncApi.getCommands()
+            for (command in commands) {
+                handleRemoteCommand(command)
+            }
+        } catch (e: Exception) {
+            // Log error but don't fail - command checking is non-critical
+        }
+    }
+
+    private suspend fun handleRemoteCommand(command: RemoteCommand) {
+        _syncState.value = _syncState.value.copy(pendingCommand = command)
+
+        try {
+            when (command.commandType.lowercase()) {
+                "lock" -> {
+                    onLockCommand?.invoke()
+                    syncApi.acknowledgeCommand(command.id, true)
+                }
+                "wipe" -> {
+                    onWipeCommand?.invoke()
+                    syncApi.acknowledgeCommand(command.id, true)
+                }
+                else -> {
+                    syncApi.acknowledgeCommand(command.id, false)
+                }
+            }
+        } catch (e: Exception) {
+            syncApi.acknowledgeCommand(command.id, false)
+        } finally {
+            _syncState.value = _syncState.value.copy(pendingCommand = null)
+        }
     }
 
     suspend fun syncNow() {
@@ -180,4 +229,20 @@ data class SyncPushResponse(
 interface SyncApi {
     suspend fun pull(sinceVersion: Long): SyncPullResponse
     suspend fun push(request: SyncPushRequest): SyncPushResponse
+    suspend fun getCommands(): List<RemoteCommand>
+    suspend fun acknowledgeCommand(commandId: String, success: Boolean)
+}
+
+// Remote command models
+data class RemoteCommand(
+    val id: String,
+    val commandType: String,  // "lock" or "wipe"
+    val status: String,
+    val createdAt: Long
+)
+
+// Command types
+sealed class RemoteCommandType {
+    object Lock : RemoteCommandType()
+    object Wipe : RemoteCommandType()
 }

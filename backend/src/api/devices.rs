@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use crate::{
     auth::{jwt::validate_access_token, AuthUser},
-    db::{self, AuthRequestStatus},
+    db::{self, AuthRequestStatus, RemoteCommandStatus, RemoteCommandType},
     sync::{SyncNotification, SyncNotificationType},
     AppError, AppState, Result,
 };
@@ -27,6 +27,10 @@ pub fn router() -> Router<AppState> {
         .route("/{device_id}/auth-request", post(create_auth_request))
         .route("/{device_id}/auth-response", post(respond_auth_request))
         .route("/auth-requests/pending", get(get_pending_auth_requests))
+        .route("/{device_id}/lock", post(lock_device))
+        .route("/{device_id}/wipe", post(wipe_device))
+        .route("/commands", get(get_pending_commands))
+        .route("/commands/{command_id}/ack", post(acknowledge_command))
 }
 
 /// Extract and validate auth from Authorization header
@@ -331,4 +335,178 @@ async fn get_pending_auth_requests(
         .collect();
 
     Ok(Json(response))
+}
+
+// ============ Remote Lock/Wipe ============
+
+async fn lock_device(
+    State(state): State<AppState>,
+    auth_header: TypedHeader<Authorization<Bearer>>,
+    Path(target_device_id): Path<Uuid>,
+) -> Result<Json<serde_json::Value>> {
+    let auth_user = extract_auth(&state, auth_header).await?;
+
+    // Verify target device belongs to user
+    let target_device = db::get_device_by_id(&state.db, target_device_id)
+        .await?
+        .ok_or(AppError::DeviceNotFound)?;
+
+    if target_device.user_id != auth_user.user_id {
+        return Err(AppError::DeviceNotFound);
+    }
+
+    // Can't lock current device via API (just lock it locally)
+    if target_device_id == auth_user.device_id {
+        return Err(AppError::BadRequest(
+            "Cannot remotely lock current device".to_string(),
+        ));
+    }
+
+    // Create lock command
+    let command = db::create_remote_command(
+        &state.db,
+        auth_user.user_id,
+        target_device_id,
+        RemoteCommandType::Lock,
+        Some(auth_user.device_id),
+        None,
+    )
+    .await?;
+
+    // Notify target device
+    let _ = state.sync_tx.send(SyncNotification {
+        user_id: auth_user.user_id,
+        notification_type: SyncNotificationType::RemoteLockCommand,
+        version: 0,
+        source_device_id: Some(target_device_id),
+    });
+
+    Ok(Json(serde_json::json!({
+        "success": true,
+        "command_id": command.id.to_string()
+    })))
+}
+
+async fn wipe_device(
+    State(state): State<AppState>,
+    auth_header: TypedHeader<Authorization<Bearer>>,
+    Path(target_device_id): Path<Uuid>,
+) -> Result<Json<serde_json::Value>> {
+    let auth_user = extract_auth(&state, auth_header).await?;
+
+    // Verify target device belongs to user
+    let target_device = db::get_device_by_id(&state.db, target_device_id)
+        .await?
+        .ok_or(AppError::DeviceNotFound)?;
+
+    if target_device.user_id != auth_user.user_id {
+        return Err(AppError::DeviceNotFound);
+    }
+
+    // Can't wipe current device via API
+    if target_device_id == auth_user.device_id {
+        return Err(AppError::BadRequest(
+            "Cannot remotely wipe current device".to_string(),
+        ));
+    }
+
+    // Create wipe command
+    let command = db::create_remote_command(
+        &state.db,
+        auth_user.user_id,
+        target_device_id,
+        RemoteCommandType::Wipe,
+        Some(auth_user.device_id),
+        None,
+    )
+    .await?;
+
+    // Notify target device
+    let _ = state.sync_tx.send(SyncNotification {
+        user_id: auth_user.user_id,
+        notification_type: SyncNotificationType::RemoteWipeCommand,
+        version: 0,
+        source_device_id: Some(target_device_id),
+    });
+
+    Ok(Json(serde_json::json!({
+        "success": true,
+        "command_id": command.id.to_string()
+    })))
+}
+
+#[derive(Debug, Serialize)]
+pub struct RemoteCommandResponse {
+    pub id: Uuid,
+    pub command_type: String,
+    pub status: String,
+    pub created_at: i64,
+}
+
+async fn get_pending_commands(
+    State(state): State<AppState>,
+    auth_header: TypedHeader<Authorization<Bearer>>,
+) -> Result<Json<Vec<RemoteCommandResponse>>> {
+    let auth_user = extract_auth(&state, auth_header).await?;
+
+    let commands = db::get_pending_commands_for_device(&state.db, auth_user.device_id).await?;
+
+    // Mark commands as delivered
+    for command in &commands {
+        let _ = db::update_command_status(&state.db, command.id, RemoteCommandStatus::Delivered).await;
+    }
+
+    let response: Vec<RemoteCommandResponse> = commands
+        .into_iter()
+        .map(|c| RemoteCommandResponse {
+            id: c.id,
+            command_type: String::from(c.command_type),
+            status: String::from(c.status),
+            created_at: c.created_at.timestamp(),
+        })
+        .collect();
+
+    Ok(Json(response))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AcknowledgeCommandRequest {
+    pub success: bool,
+}
+
+async fn acknowledge_command(
+    State(state): State<AppState>,
+    auth_header: TypedHeader<Authorization<Bearer>>,
+    Path(command_id): Path<Uuid>,
+    Json(req): Json<AcknowledgeCommandRequest>,
+) -> Result<Json<serde_json::Value>> {
+    let auth_user = extract_auth(&state, auth_header).await?;
+
+    // Get pending commands to verify this command belongs to this device
+    let commands = db::get_pending_commands_for_device(&state.db, auth_user.device_id).await?;
+
+    // Check if command was recently delivered to this device (allow for race conditions)
+    let command_belongs_to_device = commands.iter().any(|c| c.id == command_id);
+
+    if !command_belongs_to_device {
+        // Also check if it was already delivered (status = 'delivered')
+        // by trying to update it
+        let status = if req.success {
+            RemoteCommandStatus::Executed
+        } else {
+            RemoteCommandStatus::Failed
+        };
+
+        db::update_command_status(&state.db, command_id, status).await?;
+    } else {
+        let status = if req.success {
+            RemoteCommandStatus::Executed
+        } else {
+            RemoteCommandStatus::Failed
+        };
+
+        db::update_command_status(&state.db, command_id, status).await?;
+    }
+
+    Ok(Json(serde_json::json!({ "success": true })))
 }

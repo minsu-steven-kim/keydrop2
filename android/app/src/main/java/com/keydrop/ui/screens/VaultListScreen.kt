@@ -16,12 +16,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -45,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.keydrop.R
 import com.keydrop.data.model.VaultItem
+import com.keydrop.sync.SyncState
 import com.keydrop.ui.viewmodel.VaultListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,12 +65,17 @@ fun VaultListScreen(
     val items by viewModel.items.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isSearchActive by viewModel.isSearchActive.collectAsState()
+    val syncState by viewModel.syncState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    SyncStatusIndicator(
+                        syncState = syncState,
+                        onSyncClick = viewModel::triggerSync
+                    )
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -217,5 +228,51 @@ private fun EmptyVaultContent() {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+private fun SyncStatusIndicator(
+    syncState: SyncState,
+    onSyncClick: () -> Unit
+) {
+    IconButton(onClick = onSyncClick) {
+        when {
+            syncState.isSyncing -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            syncState.error != null -> {
+                Icon(
+                    imageVector = Icons.Filled.SyncProblem,
+                    contentDescription = stringResource(R.string.sync_error),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+            !syncState.isEnabled -> {
+                Icon(
+                    imageVector = Icons.Filled.CloudOff,
+                    contentDescription = stringResource(R.string.sync_disabled),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            syncState.lastSyncTimestamp != null -> {
+                Icon(
+                    imageVector = Icons.Filled.CloudDone,
+                    contentDescription = stringResource(R.string.sync_complete),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            else -> {
+                Icon(
+                    imageVector = Icons.Filled.Sync,
+                    contentDescription = stringResource(R.string.sync),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }

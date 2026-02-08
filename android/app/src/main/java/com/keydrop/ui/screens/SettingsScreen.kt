@@ -40,6 +40,8 @@ import com.keydrop.ui.viewmodel.SettingsViewModel
 fun SettingsScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
+    onDevicesClick: () -> Unit = {},
+    onEmergencyAccessClick: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,7 +105,18 @@ fun SettingsScreen(
             ClickableSettingItem(
                 title = stringResource(R.string.devices),
                 subtitle = "${uiState.deviceCount} connected",
-                onClick = { /* Navigate to devices screen */ }
+                onClick = onDevicesClick
+            )
+
+            Divider()
+
+            // Emergency Access Section
+            SectionHeader(title = stringResource(R.string.emergency_access))
+
+            ClickableSettingItem(
+                title = stringResource(R.string.emergency_contacts),
+                subtitle = stringResource(R.string.emergency_contacts_summary),
+                onClick = onEmergencyAccessClick
             )
 
             Divider()

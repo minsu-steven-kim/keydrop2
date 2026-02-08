@@ -1,5 +1,6 @@
 use crate::state::AppState;
 use crate::storage::Storage;
+use crate::sync::{RemoteCommand, SyncState, SyncStatus};
 use crypto_core::{
     cipher::EncryptedBlob,
     kdf::{derive_keys, derive_master_key, Salt},
@@ -359,4 +360,91 @@ pub fn check_auto_lock(state: State<AppState>) -> CommandResult<bool> {
         return Ok(true);
     }
     Ok(false)
+}
+
+// =============================================================================
+// Sync Commands
+// =============================================================================
+
+#[tauri::command]
+pub fn get_sync_status(sync_state: State<SyncState>) -> CommandResult<SyncStatus> {
+    Ok(sync_state.get_status())
+}
+
+#[derive(Deserialize)]
+pub struct EnableSyncRequest {
+    pub server_url: String,
+    pub access_token: String,
+    pub device_id: String,
+}
+
+#[tauri::command]
+pub fn enable_sync(request: EnableSyncRequest, sync_state: State<SyncState>) -> CommandResult<()> {
+    sync_state.enable(request.server_url, request.access_token, request.device_id);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn disable_sync(sync_state: State<SyncState>) -> CommandResult<()> {
+    sync_state.disable();
+    Ok(())
+}
+
+#[tauri::command]
+pub fn trigger_sync(sync_state: State<SyncState>) -> CommandResult<()> {
+    if !sync_state.is_enabled() {
+        return Err(CommandError {
+            message: "Sync is not enabled".to_string(),
+        });
+    }
+
+    // Set syncing state
+    sync_state.set_syncing();
+
+    // In a full implementation, this would:
+    // 1. Pull changes from server
+    // 2. Push local changes
+    // 3. Update sync status
+
+    // For now, simulate completion
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    sync_state.set_idle(now);
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn check_remote_commands(sync_state: State<SyncState>) -> CommandResult<Vec<RemoteCommand>> {
+    if !sync_state.is_enabled() {
+        return Ok(vec![]);
+    }
+
+    // In a full implementation, this would:
+    // 1. Call the API to get pending commands
+    // 2. Return them for the frontend to handle
+
+    // For now, return empty
+    Ok(vec![])
+}
+
+// =============================================================================
+// Wipe Vault Command
+// =============================================================================
+
+#[tauri::command]
+pub fn wipe_vault(app_state: State<AppState>, sync_state: State<SyncState>) -> CommandResult<()> {
+    // Lock the vault first
+    app_state.lock();
+
+    // Disable sync
+    sync_state.disable();
+
+    // Delete the vault file
+    let storage = Storage::open()?;
+    storage.delete_vault()?;
+
+    Ok(())
 }
