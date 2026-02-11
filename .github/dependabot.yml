@@ -1,12 +1,54 @@
-# Dependabot disabled - major version bumps were causing CI failures
-# Re-enable selectively when ready to update dependencies manually
-
 version: 2
-updates: []
+updates:
+  # Rust dependencies - group all together
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      rust-minor:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ignore major version bumps - handle manually
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-# Previous configuration (for reference):
-# - cargo (Rust) - weekly, 5 PRs max
-# - npm /desktop - weekly, 5 PRs max
-# - npm /extension - weekly, 5 PRs max
-# - gradle /android - weekly, 5 PRs max
-# - github-actions - weekly, 5 PRs max
+  # Desktop app npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/desktop"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Extension npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/extension"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Android Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/android"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions - these are usually safe to update
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
