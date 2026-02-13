@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
     let state = AppState {
         db,
         jwt_secret,
-        blob_storage,
+        blob_storage: Some(blob_storage),
         sync_tx,
     };
 

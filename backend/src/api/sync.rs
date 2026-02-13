@@ -68,6 +68,10 @@ async fn pull(
     Query(query): Query<PullQuery>,
 ) -> Result<Json<SyncPullResponse>> {
     let auth_user = extract_auth(&state, auth_header).await?;
+    let blob_storage = state
+        .blob_storage
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Blob storage not configured".into()))?;
     let since_version = query.since_version.unwrap_or(0);
     let limit = query.limit.unwrap_or(100).min(1000) as usize;
 
@@ -88,7 +92,7 @@ async fn pull(
         }
 
         // Retrieve encrypted blob
-        let encrypted_data = match state.blob_storage.retrieve(&item.encrypted_blob_id).await {
+        let encrypted_data = match blob_storage.retrieve(&item.encrypted_blob_id).await {
             Ok(data) => base64::engine::general_purpose::STANDARD.encode(&data),
             Err(e) => {
                 tracing::warn!("Failed to retrieve blob {}: {}", item.encrypted_blob_id, e);
@@ -125,6 +129,10 @@ async fn push(
     Json(req): Json<SyncPushRequest>,
 ) -> Result<Json<SyncPushResponse>> {
     let auth_user = extract_auth(&state, auth_header).await?;
+    let blob_storage = state
+        .blob_storage
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Blob storage not configured".into()))?;
     let current_version = db::get_sync_version(&state.db, auth_user.user_id).await?;
 
     // Check for version mismatch (client is behind)
@@ -164,10 +172,8 @@ async fn push(
                     }
                     ConflictResolution::UseServer => {
                         // Fetch the server's encrypted data for the conflict response
-                        if let Ok(data) = state
-                            .blob_storage
-                            .retrieve(&server_item.encrypted_blob_id)
-                            .await
+                        if let Ok(data) =
+                            blob_storage.retrieve(&server_item.encrypted_blob_id).await
                         {
                             conflicts.push(SyncItem {
                                 id: server_item.id,
@@ -236,13 +242,18 @@ async fn push(
 }
 
 async fn process_sync_item(state: &AppState, user_id: Uuid, item: &SyncItem) -> Result<i64> {
+    let blob_storage = state
+        .blob_storage
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Blob storage not configured".into()))?;
+
     // Decode and store encrypted blob
     let encrypted_data = base64::engine::general_purpose::STANDARD
         .decode(&item.encrypted_data)
         .map_err(|e| AppError::BadRequest(format!("Invalid base64 data: {}", e)))?;
 
     let blob_id = BlobStorage::generate_blob_id(user_id);
-    state.blob_storage.store(&blob_id, &encrypted_data).await?;
+    blob_storage.store(&blob_id, &encrypted_data).await?;
 
     // Increment version
     let new_version = db::increment_sync_version(&state.db, user_id).await?;

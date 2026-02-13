@@ -19,7 +19,7 @@ use tokio::sync::broadcast;
 pub struct AppState {
     pub db: sqlx::PgPool,
     pub jwt_secret: String,
-    pub blob_storage: Arc<blob::BlobStorage>,
+    pub blob_storage: Option<Arc<blob::BlobStorage>>,
     /// Broadcast channel for real-time sync notifications
     pub sync_tx: broadcast::Sender<sync::SyncNotification>,
 }

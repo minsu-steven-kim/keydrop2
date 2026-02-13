@@ -14,6 +14,11 @@ COPY Cargo.toml Cargo.lock ./
 COPY crypto-core ./crypto-core
 COPY backend ./backend
 
+# Create stub for desktop workspace member (not needed for backend build)
+RUN mkdir -p desktop/src-tauri/src && \
+    echo '[package]\nname = "keydrop-desktop"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]' > desktop/src-tauri/Cargo.toml && \
+    echo 'fn main() {}' > desktop/src-tauri/src/main.rs
+
 # Build release binary
 RUN cargo build --release --package keydrop-backend
 
