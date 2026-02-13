@@ -320,8 +320,7 @@ async fn get_pending_auth_requests(
     auth_header: TypedHeader<Authorization<Bearer>>,
 ) -> Result<Json<Vec<PendingAuthRequest>>> {
     let auth_user = extract_auth(&state, auth_header).await?;
-    let requests =
-        db::get_pending_auth_requests_for_device(&state.db, auth_user.device_id).await?;
+    let requests = db::get_pending_auth_requests_for_device(&state.db, auth_user.device_id).await?;
 
     let response: Vec<PendingAuthRequest> = requests
         .into_iter()
@@ -453,7 +452,8 @@ async fn get_pending_commands(
 
     // Mark commands as delivered
     for command in &commands {
-        let _ = db::update_command_status(&state.db, command.id, RemoteCommandStatus::Delivered).await;
+        let _ =
+            db::update_command_status(&state.db, command.id, RemoteCommandStatus::Delivered).await;
     }
 
     let response: Vec<RemoteCommandResponse> = commands

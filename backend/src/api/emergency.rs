@@ -151,10 +151,14 @@ async fn remove_contact(
 
     let contact = db::get_emergency_contact_by_id(&state.db, contact_id)
         .await?
-        .ok_or(AppError::NotFound("Emergency contact not found".to_string()))?;
+        .ok_or(AppError::NotFound(
+            "Emergency contact not found".to_string(),
+        ))?;
 
     if contact.user_id != user_id {
-        return Err(AppError::NotFound("Emergency contact not found".to_string()));
+        return Err(AppError::NotFound(
+            "Emergency contact not found".to_string(),
+        ));
     }
 
     db::delete_emergency_contact(&state.db, contact_id).await?;
@@ -255,7 +259,9 @@ async fn request_access(
     // Get the emergency contact and verify the requesting user is the contact
     let contact = db::get_emergency_contact_by_id(&state.db, req.emergency_contact_id)
         .await?
-        .ok_or(AppError::NotFound("Emergency contact not found".to_string()))?;
+        .ok_or(AppError::NotFound(
+            "Emergency contact not found".to_string(),
+        ))?;
 
     // Verify the requesting user is the contact
     if contact.contact_user_id != Some(requesting_user_id) {
@@ -283,8 +289,7 @@ async fn request_access(
     }
 
     // Calculate waiting period end
-    let waiting_period_ends_at =
-        Utc::now() + Duration::hours(contact.waiting_period_hours as i64);
+    let waiting_period_ends_at = Utc::now() + Duration::hours(contact.waiting_period_hours as i64);
 
     let access_request = db::create_emergency_access_request(
         &state.db,
@@ -379,16 +384,16 @@ async fn deny_request(
 
     let contact = db::get_emergency_contact_by_id(&state.db, request.emergency_contact_id)
         .await?
-        .ok_or(AppError::NotFound("Emergency contact not found".to_string()))?;
+        .ok_or(AppError::NotFound(
+            "Emergency contact not found".to_string(),
+        ))?;
 
     if contact.user_id != user_id {
         return Err(AppError::NotFound("Access request not found".to_string()));
     }
 
     if request.status != EmergencyAccessRequestStatus::Pending {
-        return Err(AppError::BadRequest(
-            "Request is not pending".to_string(),
-        ));
+        return Err(AppError::BadRequest("Request is not pending".to_string()));
     }
 
     db::deny_emergency_access_request(&state.db, request_id).await?;

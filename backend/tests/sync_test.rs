@@ -72,7 +72,11 @@ async fn test_pull_empty_vault() {
     let email = random_email();
     let (access_token, _device_id) = register_user(&router, &email).await;
 
-    let req = auth_request(Method::GET, "/api/v1/sync/pull?since_version=0", &access_token);
+    let req = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=0",
+        &access_token,
+    );
 
     let response = router.oneshot(req).await.unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -124,7 +128,11 @@ async fn test_push_and_pull_items() {
     assert!(new_version > 1);
 
     // Pull to verify
-    let pull_req = auth_request(Method::GET, "/api/v1/sync/pull?since_version=0", &access_token);
+    let pull_req = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=0",
+        &access_token,
+    );
 
     let pull_response = router.oneshot(pull_req).await.unwrap();
     assert_eq!(pull_response.status(), StatusCode::OK);
@@ -182,7 +190,11 @@ async fn test_push_multiple_items() {
     assert_eq!(push_response.status(), StatusCode::OK);
 
     // Pull to verify
-    let pull_req = auth_request(Method::GET, "/api/v1/sync/pull?since_version=0", &access_token);
+    let pull_req = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=0",
+        &access_token,
+    );
 
     let pull_response = router.oneshot(pull_req).await.unwrap();
     assert_eq!(pull_response.status(), StatusCode::OK);
@@ -253,7 +265,11 @@ async fn test_push_deleted_item() {
     assert_eq!(push_response2.status(), StatusCode::OK);
 
     // Pull to verify
-    let pull_req = auth_request(Method::GET, "/api/v1/sync/pull?since_version=0", &access_token);
+    let pull_req = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=0",
+        &access_token,
+    );
 
     let pull_response = router.oneshot(pull_req).await.unwrap();
     assert_eq!(pull_response.status(), StatusCode::OK);
@@ -407,7 +423,11 @@ async fn test_two_devices_sync() {
     assert_eq!(push_response.status(), StatusCode::OK);
 
     // Pull from device 2
-    let pull_req = auth_request(Method::GET, "/api/v1/sync/pull?since_version=0", &access_token2);
+    let pull_req = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=0",
+        &access_token2,
+    );
 
     let pull_response = router.oneshot(pull_req).await.unwrap();
     assert_eq!(pull_response.status(), StatusCode::OK);

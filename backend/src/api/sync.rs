@@ -248,8 +248,15 @@ async fn process_sync_item(state: &AppState, user_id: Uuid, item: &SyncItem) -> 
     let new_version = db::increment_sync_version(&state.db, user_id).await?;
 
     // Upsert vault item record
-    db::upsert_vault_item(&state.db, item.id, user_id, new_version, &blob_id, item.is_deleted)
-        .await?;
+    db::upsert_vault_item(
+        &state.db,
+        item.id,
+        user_id,
+        new_version,
+        &blob_id,
+        item.is_deleted,
+    )
+    .await?;
 
     Ok(new_version)
 }
@@ -271,31 +278,29 @@ async fn handle_notify_ws(socket: WebSocket, state: AppState) {
             }
 
             match serde_json::from_str::<AuthMessage>(&text) {
-                Ok(auth_msg) => {
-                    match validate_access_token(&auth_msg.token, &state.jwt_secret) {
-                        Ok(claims) => {
-                            let user_id = match claims.sub.parse::<Uuid>() {
-                                Ok(id) => id,
-                                Err(_) => {
-                                    let _ = sender.send(Message::Close(None)).await;
-                                    return;
-                                }
-                            };
-                            let device_id = match claims.device_id.parse::<Uuid>() {
-                                Ok(id) => id,
-                                Err(_) => {
-                                    let _ = sender.send(Message::Close(None)).await;
-                                    return;
-                                }
-                            };
-                            AuthUser { user_id, device_id }
-                        }
-                        Err(_) => {
-                            let _ = sender.send(Message::Close(None)).await;
-                            return;
-                        }
+                Ok(auth_msg) => match validate_access_token(&auth_msg.token, &state.jwt_secret) {
+                    Ok(claims) => {
+                        let user_id = match claims.sub.parse::<Uuid>() {
+                            Ok(id) => id,
+                            Err(_) => {
+                                let _ = sender.send(Message::Close(None)).await;
+                                return;
+                            }
+                        };
+                        let device_id = match claims.device_id.parse::<Uuid>() {
+                            Ok(id) => id,
+                            Err(_) => {
+                                let _ = sender.send(Message::Close(None)).await;
+                                return;
+                            }
+                        };
+                        AuthUser { user_id, device_id }
                     }
-                }
+                    Err(_) => {
+                        let _ = sender.send(Message::Close(None)).await;
+                        return;
+                    }
+                },
                 Err(_) => {
                     let _ = sender.send(Message::Close(None)).await;
                     return;

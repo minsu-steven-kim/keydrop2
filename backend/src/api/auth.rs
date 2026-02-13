@@ -45,7 +45,10 @@ async fn register(
     Json(req): Json<RegisterRequest>,
 ) -> Result<Json<RegisterResponse>> {
     // Check if user already exists
-    if db::get_user_by_email(&state.db, &req.email).await?.is_some() {
+    if db::get_user_by_email(&state.db, &req.email)
+        .await?
+        .is_some()
+    {
         return Err(AppError::UserAlreadyExists);
     }
 

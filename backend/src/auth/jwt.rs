@@ -39,11 +39,7 @@ pub struct TokenPair {
 }
 
 /// Generate an access token for a user
-pub fn generate_access_token(
-    user_id: Uuid,
-    device_id: Uuid,
-    secret: &str,
-) -> Result<String> {
+pub fn generate_access_token(user_id: Uuid, device_id: Uuid, secret: &str) -> Result<String> {
     let now = Utc::now();
     let exp = now + Duration::minutes(ACCESS_TOKEN_EXPIRY_MINUTES);
 
@@ -66,11 +62,7 @@ pub fn generate_access_token(
 }
 
 /// Generate a refresh token for a user
-pub fn generate_refresh_token(
-    user_id: Uuid,
-    device_id: Uuid,
-    secret: &str,
-) -> Result<String> {
+pub fn generate_refresh_token(user_id: Uuid, device_id: Uuid, secret: &str) -> Result<String> {
     let now = Utc::now();
     let exp = now + Duration::days(REFRESH_TOKEN_EXPIRY_DAYS);
 
@@ -93,11 +85,7 @@ pub fn generate_refresh_token(
 }
 
 /// Generate both access and refresh tokens
-pub fn generate_token_pair(
-    user_id: Uuid,
-    device_id: Uuid,
-    secret: &str,
-) -> Result<TokenPair> {
+pub fn generate_token_pair(user_id: Uuid, device_id: Uuid, secret: &str) -> Result<TokenPair> {
     let access_token = generate_access_token(user_id, device_id, secret)?;
     let refresh_token = generate_refresh_token(user_id, device_id, secret)?;
 
@@ -150,5 +138,8 @@ pub fn hash_refresh_token(token: &str) -> String {
     use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
-    base64::Engine::encode(&base64::engine::general_purpose::STANDARD, hasher.finalize())
+    base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        hasher.finalize(),
+    )
 }

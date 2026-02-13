@@ -33,8 +33,7 @@ impl EncryptedBlob {
     pub fn from_base64(encoded: &str) -> Result<Self> {
         let json = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, encoded)
             .map_err(|e| CryptoError::Deserialization(e.to_string()))?;
-        serde_json::from_slice(&json)
-            .map_err(|e| CryptoError::Deserialization(e.to_string()))
+        serde_json::from_slice(&json).map_err(|e| CryptoError::Deserialization(e.to_string()))
     }
 }
 
@@ -43,8 +42,8 @@ impl EncryptedBlob {
 /// Generates a random 96-bit nonce for each encryption.
 /// Returns an EncryptedBlob containing the nonce and ciphertext.
 pub fn encrypt(data: &[u8], key: &[u8; KEY_SIZE]) -> Result<EncryptedBlob> {
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .map_err(|e| CryptoError::Encryption(e.to_string()))?;
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|e| CryptoError::Encryption(e.to_string()))?;
 
     // Generate random nonce
     let mut nonce_bytes = [0u8; NONCE_SIZE];
@@ -68,8 +67,8 @@ pub fn encrypt(data: &[u8], key: &[u8; KEY_SIZE]) -> Result<EncryptedBlob> {
 ///
 /// Verifies the authentication tag and returns the plaintext.
 pub fn decrypt(blob: &EncryptedBlob, key: &[u8; KEY_SIZE]) -> Result<Vec<u8>> {
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .map_err(|e| CryptoError::Decryption(e.to_string()))?;
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|e| CryptoError::Decryption(e.to_string()))?;
 
     let nonce = Nonce::from_slice(&blob.nonce);
 
@@ -88,8 +87,7 @@ pub fn encrypt_string(plaintext: &str, key: &[u8; KEY_SIZE]) -> Result<String> {
 pub fn decrypt_string(encoded: &str, key: &[u8; KEY_SIZE]) -> Result<String> {
     let blob = EncryptedBlob::from_base64(encoded)?;
     let plaintext = decrypt(&blob, key)?;
-    String::from_utf8(plaintext)
-        .map_err(|e| CryptoError::Decryption(e.to_string()))
+    String::from_utf8(plaintext).map_err(|e| CryptoError::Decryption(e.to_string()))
 }
 
 #[cfg(test)]

@@ -351,7 +351,10 @@ pub async fn create_auth_request(
     Ok(request)
 }
 
-pub async fn get_auth_request_by_id(pool: &PgPool, request_id: Uuid) -> Result<Option<AuthRequest>> {
+pub async fn get_auth_request_by_id(
+    pool: &PgPool,
+    request_id: Uuid,
+) -> Result<Option<AuthRequest>> {
     let request = sqlx::query_as::<_, AuthRequest>(
         r#"
         SELECT * FROM auth_requests WHERE id = $1

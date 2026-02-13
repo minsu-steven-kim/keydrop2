@@ -119,7 +119,11 @@ async fn test_full_user_journey() {
     let access_token2 = json["access_token"].as_str().unwrap().to_string();
 
     // 4. Sync on second device
-    let pull_req = auth_request(Method::GET, "/api/v1/sync/pull?since_version=0", &access_token2);
+    let pull_req = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=0",
+        &access_token2,
+    );
 
     let pull_response = router.clone().oneshot(pull_req).await.unwrap();
     assert_eq!(pull_response.status(), StatusCode::OK);
@@ -167,7 +171,11 @@ async fn test_full_user_journey() {
     assert_eq!(push_response2.status(), StatusCode::OK);
 
     // 7. Sync on first device
-    let pull_req2 = auth_request(Method::GET, "/api/v1/sync/pull?since_version=2", &access_token);
+    let pull_req2 = auth_request(
+        Method::GET,
+        "/api/v1/sync/pull?since_version=2",
+        &access_token,
+    );
 
     let pull_response2 = router.clone().oneshot(pull_req2).await.unwrap();
     assert_eq!(pull_response2.status(), StatusCode::OK);

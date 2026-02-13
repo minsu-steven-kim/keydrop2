@@ -236,28 +236,25 @@ impl Vault {
 
     /// Export vault to encrypted blob
     pub fn export(&self, key: &[u8; KEY_SIZE]) -> Result<EncryptedBlob> {
-        let json = serde_json::to_vec(self)
-            .map_err(|e| CryptoError::Serialization(e.to_string()))?;
+        let json =
+            serde_json::to_vec(self).map_err(|e| CryptoError::Serialization(e.to_string()))?;
         encrypt(&json, key)
     }
 
     /// Import vault from encrypted blob
     pub fn import(blob: &EncryptedBlob, key: &[u8; KEY_SIZE]) -> Result<Self> {
         let json = decrypt(blob, key)?;
-        serde_json::from_slice(&json)
-            .map_err(|e| CryptoError::Deserialization(e.to_string()))
+        serde_json::from_slice(&json).map_err(|e| CryptoError::Deserialization(e.to_string()))
     }
 
     /// Export vault to JSON string (for backup/transfer)
     pub fn to_json(&self) -> Result<String> {
-        serde_json::to_string_pretty(self)
-            .map_err(|e| CryptoError::Serialization(e.to_string()))
+        serde_json::to_string_pretty(self).map_err(|e| CryptoError::Serialization(e.to_string()))
     }
 
     /// Import vault from JSON string
     pub fn from_json(json: &str) -> Result<Self> {
-        serde_json::from_str(json)
-            .map_err(|e| CryptoError::Deserialization(e.to_string()))
+        serde_json::from_str(json).map_err(|e| CryptoError::Deserialization(e.to_string()))
     }
 
     /// Get total number of items
@@ -337,16 +334,13 @@ mod tests {
         let mut vault = Vault::new();
 
         vault.add_item(
-            VaultItem::new("GitHub", "dev@example.com", "pass1")
-                .with_url("https://github.com"),
+            VaultItem::new("GitHub", "dev@example.com", "pass1").with_url("https://github.com"),
         );
         vault.add_item(
-            VaultItem::new("GitLab", "dev@example.com", "pass2")
-                .with_url("https://gitlab.com"),
+            VaultItem::new("GitLab", "dev@example.com", "pass2").with_url("https://gitlab.com"),
         );
         vault.add_item(
-            VaultItem::new("Google", "user@gmail.com", "pass3")
-                .with_url("https://google.com"),
+            VaultItem::new("Google", "user@gmail.com", "pass3").with_url("https://google.com"),
         );
 
         // Search by name
@@ -363,8 +357,7 @@ mod tests {
         let mut vault = Vault::new();
 
         vault.add_item(
-            VaultItem::new("GitHub", "user", "pass")
-                .with_url("https://github.com/login"),
+            VaultItem::new("GitHub", "user", "pass").with_url("https://github.com/login"),
         );
         vault.add_item(
             VaultItem::new("GitHub Enterprise", "user", "pass")
@@ -426,9 +419,7 @@ mod tests {
     fn test_vault_categories() {
         let mut vault = Vault::new();
 
-        vault.add_item(
-            VaultItem::new("Test", "user", "pass").with_category("Login"),
-        );
+        vault.add_item(VaultItem::new("Test", "user", "pass").with_category("Login"));
 
         let results = vault.get_by_category("Login");
         assert_eq!(results.len(), 1);

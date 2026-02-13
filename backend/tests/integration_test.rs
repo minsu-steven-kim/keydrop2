@@ -2,7 +2,9 @@
 //!
 //! These tests verify the core functionality without requiring external services.
 
-use keydrop_backend::auth::jwt::{generate_token_pair, validate_access_token, validate_refresh_token};
+use keydrop_backend::auth::jwt::{
+    generate_token_pair, validate_access_token, validate_refresh_token,
+};
 use keydrop_backend::sync::{resolve_conflict, ConflictResolution, ConflictStrategy, SyncItem};
 use uuid::Uuid;
 

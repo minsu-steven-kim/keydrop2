@@ -86,7 +86,10 @@ mod tests {
 
         assert_eq!(imported.items.len(), 1);
         assert_eq!(imported.items[0].name, "Test Site");
-        assert_eq!(imported.items[0].url, Some("https://example.com".to_string()));
+        assert_eq!(
+            imported.items[0].url,
+            Some("https://example.com".to_string())
+        );
 
         // 5. Verify wrong key fails
         let wrong_salt = Salt::generate().unwrap();

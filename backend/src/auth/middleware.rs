@@ -24,7 +24,9 @@ fn extract_bearer_token(req: &Request) -> Result<&str> {
         .ok_or_else(|| AppError::Unauthorized("Missing authorization header".to_string()))?;
 
     if !header.starts_with("Bearer ") {
-        return Err(AppError::Unauthorized("Invalid authorization header".to_string()));
+        return Err(AppError::Unauthorized(
+            "Invalid authorization header".to_string(),
+        ));
     }
 
     Ok(&header[7..])

@@ -13,12 +13,10 @@ pub struct BlobStorage {
 impl BlobStorage {
     /// Create a new blob storage instance
     pub async fn new() -> Result<Self> {
-        let config = aws_config::defaults(BehaviorVersion::latest())
-            .load()
-            .await;
+        let config = aws_config::defaults(BehaviorVersion::latest()).load().await;
 
-        let bucket = std::env::var("S3_BUCKET")
-            .unwrap_or_else(|_| "keydrop-vault-blobs".to_string());
+        let bucket =
+            std::env::var("S3_BUCKET").unwrap_or_else(|_| "keydrop-vault-blobs".to_string());
 
         // Check for local S3 endpoint (for development with MinIO/LocalStack)
         let client = if let Ok(endpoint) = std::env::var("S3_ENDPOINT") {
@@ -56,7 +54,8 @@ impl BlobStorage {
 
     /// Retrieve an encrypted blob
     pub async fn retrieve(&self, blob_id: &str) -> Result<Vec<u8>> {
-        let response = self.client
+        let response = self
+            .client
             .get_object()
             .bucket(&self.bucket)
             .key(blob_id)
@@ -90,7 +89,8 @@ impl BlobStorage {
 
     /// Check if a blob exists
     pub async fn exists(&self, blob_id: &str) -> Result<bool> {
-        match self.client
+        match self
+            .client
             .head_object()
             .bucket(&self.bucket)
             .key(blob_id)
@@ -103,7 +103,10 @@ impl BlobStorage {
                 if e.to_string().contains("404") || e.to_string().contains("NoSuchKey") {
                     Ok(false)
                 } else {
-                    Err(AppError::BlobStorage(format!("Failed to check blob existence: {}", e)))
+                    Err(AppError::BlobStorage(format!(
+                        "Failed to check blob existence: {}",
+                        e
+                    )))
                 }
             }
         }
