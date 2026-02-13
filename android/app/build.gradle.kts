@@ -71,7 +71,7 @@ dependencies {
     // Core Android (pinned to Kotlin 1.9.x compatible versions)
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.activity:activity-compose:1.12.4")
 
     // Compose BOM (2024.05 is last Kotlin 1.9.x compiled BOM)
     implementation(platform("androidx.compose:compose-bom:2024.05.00"))
