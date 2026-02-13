@@ -37,7 +37,7 @@ export async function deriveMasterKey(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as Uint8Array<ArrayBuffer>,
       iterations: 600000, // OWASP recommended
       hash: 'SHA-256',
     },

@@ -82,7 +82,6 @@ export function showAutofillIcon(
   icon.title = 'Keydrop: Click to autofill';
 
   // Position the icon
-  const rect = field.getBoundingClientRect();
   icon.style.cssText = `
     position: absolute;
     right: 8px;

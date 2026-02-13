@@ -8,7 +8,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use keydrop_backend::{api, blob, sync, AppState};
+use keydrop_backend::{api, blob, AppState};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

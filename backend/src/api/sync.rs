@@ -7,7 +7,7 @@ use axum::{
     },
     response::Response,
     routing::{get, post},
-    Extension, Json, Router,
+    Json, Router,
 };
 use axum_extra::TypedHeader;
 use base64::Engine;

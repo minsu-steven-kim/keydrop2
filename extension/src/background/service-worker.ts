@@ -142,7 +142,7 @@ async function handleMessage(message: MessageType): Promise<MessageResponse> {
         const json = JSON.stringify(unlockedVault);
         const encrypted = await encrypt(json, keys.vaultKey);
         await saveEncryptedVault(
-          arrayBufferToBase64(salt.buffer),
+          arrayBufferToBase64(salt.buffer as ArrayBuffer),
           JSON.stringify(encrypted)
         );
 

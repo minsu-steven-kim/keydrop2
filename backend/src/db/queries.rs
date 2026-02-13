@@ -766,12 +766,12 @@ pub async fn update_command_status(
     command_id: Uuid,
     status: RemoteCommandStatus,
 ) -> Result<()> {
-    let status_str: String = status.into();
     let executed_at = if status == RemoteCommandStatus::Executed {
         Some(Utc::now())
     } else {
         None
     };
+    let status_str: String = status.into();
 
     sqlx::query(
         r#"
