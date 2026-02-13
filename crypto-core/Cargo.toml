@@ -6,7 +6,7 @@ description = "Cryptographic core library for Keydrop password manager"
 license = "MIT"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dependencies]
 argon2 = "0.5"
