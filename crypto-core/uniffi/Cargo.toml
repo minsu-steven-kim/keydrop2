@@ -10,12 +10,12 @@ name = "crypto_core_uniffi"
 
 [dependencies]
 crypto-core = { path = ".." }
-uniffi = { version = "0.25", features = ["cli"] }
+uniffi = { version = "0.31", features = ["cli"] }
 base64 = "0.21"
 thiserror = "1.0"
 
 [build-dependencies]
-uniffi = { version = "0.25", features = ["build"] }
+uniffi = { version = "0.31", features = ["build"] }
 
 [[bin]]
 name = "uniffi-bindgen"
