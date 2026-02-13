@@ -6,7 +6,7 @@ description = "Keydrop Password Manager Desktop App"
 license = "MIT"
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2.5", features = [] }
 
 [dependencies]
 tauri = { version = "1.6", features = ["shell-open", "clipboard-write-text"] }
