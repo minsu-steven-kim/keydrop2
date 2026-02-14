@@ -70,11 +70,11 @@ impl Storage {
 
     /// Check if a vault exists
     pub fn vault_exists(&self) -> Result<bool> {
-        let count: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM vault_meta WHERE id = 1",
-            [],
-            |row| row.get(0),
-        )?;
+        let count: i64 =
+            self.conn
+                .query_row("SELECT COUNT(*) FROM vault_meta WHERE id = 1", [], |row| {
+                    row.get(0)
+                })?;
         Ok(count > 0)
     }
 
@@ -167,8 +167,7 @@ impl Storage {
     pub fn delete_vault(&self) -> Result<()> {
         self.conn
             .execute("DELETE FROM vault_meta WHERE id = 1", [])?;
-        self.conn
-            .execute("DELETE FROM settings", [])?;
+        self.conn.execute("DELETE FROM settings", [])?;
         Ok(())
     }
 }

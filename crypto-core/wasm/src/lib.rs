@@ -133,8 +133,8 @@ pub struct PasswordOptionsJs {
 /// Generate a random password with the given options
 #[wasm_bindgen(js_name = generatePassword)]
 pub fn generate_password(options: JsValue) -> Result<String, JsValue> {
-    let opts: PasswordOptionsJs = serde_wasm_bindgen::from_value(options)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let opts: PasswordOptionsJs =
+        serde_wasm_bindgen::from_value(options).map_err(|e| JsValue::from_str(&e.to_string()))?;
 
     let rust_opts = RustPasswordOptions {
         length: opts.length.unwrap_or(16),
@@ -158,8 +158,8 @@ pub fn generate_passphrase(word_count: usize, separator: &str) -> Result<String,
 /// Calculate password entropy
 #[wasm_bindgen(js_name = calculateEntropy)]
 pub fn calculate_entropy(options: JsValue) -> Result<f64, JsValue> {
-    let opts: PasswordOptionsJs = serde_wasm_bindgen::from_value(options)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let opts: PasswordOptionsJs =
+        serde_wasm_bindgen::from_value(options).map_err(|e| JsValue::from_str(&e.to_string()))?;
 
     let rust_opts = RustPasswordOptions {
         length: opts.length.unwrap_or(16),
@@ -243,8 +243,8 @@ impl Vault {
     /// Add an item to the vault
     #[wasm_bindgen(js_name = addItem)]
     pub fn add_item(&mut self, item: JsValue) -> Result<String, JsValue> {
-        let item_js: VaultItemJs = serde_wasm_bindgen::from_value(item)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let item_js: VaultItemJs =
+            serde_wasm_bindgen::from_value(item).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let rust_item: RustVaultItem = item_js.into();
         Ok(self.inner.add_item(rust_item))
     }
@@ -265,8 +265,8 @@ impl Vault {
     /// Update an item
     #[wasm_bindgen(js_name = updateItem)]
     pub fn update_item(&mut self, id: &str, item: JsValue) -> Result<(), JsValue> {
-        let item_js: VaultItemJs = serde_wasm_bindgen::from_value(item)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let item_js: VaultItemJs =
+            serde_wasm_bindgen::from_value(item).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let rust_item: RustVaultItem = item_js.into();
         self.inner.update_item(id, rust_item).map_err(to_js_error)
     }
@@ -282,14 +282,24 @@ impl Vault {
     /// Search items by query
     #[wasm_bindgen]
     pub fn search(&self, query: &str) -> Result<JsValue, JsValue> {
-        let items: Vec<VaultItemJs> = self.inner.search(query).iter().map(|i| (*i).into()).collect();
+        let items: Vec<VaultItemJs> = self
+            .inner
+            .search(query)
+            .iter()
+            .map(|i| (*i).into())
+            .collect();
         serde_wasm_bindgen::to_value(&items).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Find items by URL (for autofill)
     #[wasm_bindgen(js_name = findByUrl)]
     pub fn find_by_url(&self, url: &str) -> Result<JsValue, JsValue> {
-        let items: Vec<VaultItemJs> = self.inner.find_by_url(url).iter().map(|i| (*i).into()).collect();
+        let items: Vec<VaultItemJs> = self
+            .inner
+            .find_by_url(url)
+            .iter()
+            .map(|i| (*i).into())
+            .collect();
         serde_wasm_bindgen::to_value(&items).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -310,7 +320,12 @@ impl Vault {
     /// Get favorites
     #[wasm_bindgen(js_name = getFavorites)]
     pub fn get_favorites(&self) -> Result<JsValue, JsValue> {
-        let items: Vec<VaultItemJs> = self.inner.get_favorites().iter().map(|i| (*i).into()).collect();
+        let items: Vec<VaultItemJs> = self
+            .inner
+            .get_favorites()
+            .iter()
+            .map(|i| (*i).into())
+            .collect();
         serde_wasm_bindgen::to_value(&items).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 

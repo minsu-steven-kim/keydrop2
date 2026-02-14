@@ -34,7 +34,7 @@ impl Default for SyncStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RemoteCommand {
     pub id: String,
-    pub command_type: String,  // "lock" or "wipe"
+    pub command_type: String, // "lock" or "wipe"
     pub created_at: u64,
 }
 

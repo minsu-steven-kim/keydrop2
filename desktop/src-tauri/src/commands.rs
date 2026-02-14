@@ -112,11 +112,10 @@ pub fn unlock_vault(password: String, state: State<AppState>) -> CommandResult<(
     let keys = derive_keys(&master_key)?;
 
     // Decrypt vault
-    let encrypted: EncryptedBlob = serde_json::from_slice(&encrypted_bytes).map_err(|e| {
-        CommandError {
+    let encrypted: EncryptedBlob =
+        serde_json::from_slice(&encrypted_bytes).map_err(|e| CommandError {
             message: e.to_string(),
-        }
-    })?;
+        })?;
     let vault = Vault::import(&encrypted, &keys.vault_key)?;
 
     // Update state
@@ -294,11 +293,7 @@ pub fn get_favorites(state: State<AppState>) -> CommandResult<Vec<VaultItemDto>>
         message: "Vault is locked".to_string(),
     })?;
 
-    Ok(vault
-        .get_favorites()
-        .iter()
-        .map(|i| (*i).into())
-        .collect())
+    Ok(vault.get_favorites().iter().map(|i| (*i).into()).collect())
 }
 
 // =============================================================================

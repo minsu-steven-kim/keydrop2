@@ -314,19 +314,31 @@ impl Vault {
     /// Search items
     pub fn search(&self, query: String) -> Vec<VaultItemData> {
         let vault = self.inner.lock().unwrap();
-        vault.search(&query).into_iter().map(VaultItemData::from).collect()
+        vault
+            .search(&query)
+            .into_iter()
+            .map(VaultItemData::from)
+            .collect()
     }
 
     /// Find items by URL (for autofill)
     pub fn find_by_url(&self, url: String) -> Vec<VaultItemData> {
         let vault = self.inner.lock().unwrap();
-        vault.find_by_url(&url).into_iter().map(VaultItemData::from).collect()
+        vault
+            .find_by_url(&url)
+            .into_iter()
+            .map(VaultItemData::from)
+            .collect()
     }
 
     /// Get favorite items
     pub fn get_favorites(&self) -> Vec<VaultItemData> {
         let vault = self.inner.lock().unwrap();
-        vault.get_favorites().into_iter().map(VaultItemData::from).collect()
+        vault
+            .get_favorites()
+            .into_iter()
+            .map(VaultItemData::from)
+            .collect()
     }
 
     /// Get categories
