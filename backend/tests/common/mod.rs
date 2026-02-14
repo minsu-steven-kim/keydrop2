@@ -83,4 +83,3 @@ pub async fn create_test_router() -> (Router, PgPool) {
 pub fn random_email() -> String {
     format!("test_{}@example.com", uuid::Uuid::new_v4())
 }
-
