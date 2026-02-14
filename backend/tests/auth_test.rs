@@ -7,7 +7,7 @@ use axum::{
 use serde_json::{json, Value};
 use tower::ServiceExt;
 
-use common::{create_test_router, random_email, TestUser};
+use common::{create_test_router, random_email};
 
 /// Helper to make JSON request
 fn json_request(method: Method, uri: &str, body: Value) -> Request<Body> {
@@ -15,17 +15,6 @@ fn json_request(method: Method, uri: &str, body: Value) -> Request<Body> {
         .method(method)
         .uri(uri)
         .header(header::CONTENT_TYPE, "application/json")
-        .body(Body::from(serde_json::to_string(&body).unwrap()))
-        .unwrap()
-}
-
-/// Helper to make authenticated JSON request
-fn auth_json_request(method: Method, uri: &str, body: Value, token: &str) -> Request<Body> {
-    Request::builder()
-        .method(method)
-        .uri(uri)
-        .header(header::CONTENT_TYPE, "application/json")
-        .header(header::AUTHORIZATION, format!("Bearer {}", token))
         .body(Body::from(serde_json::to_string(&body).unwrap()))
         .unwrap()
 }

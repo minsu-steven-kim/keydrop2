@@ -3,7 +3,6 @@ use keydrop_backend::{api, AppState};
 use once_cell::sync::Lazy;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
-use std::sync::Arc;
 use tokio::sync::broadcast;
 
 /// Test database URL (use a separate test database)
@@ -85,41 +84,3 @@ pub fn random_email() -> String {
     format!("test_{}@example.com", uuid::Uuid::new_v4())
 }
 
-/// Test user creation helper
-pub struct TestUser {
-    pub email: String,
-    pub password: String,
-    pub user_id: Option<String>,
-    pub device_id: Option<String>,
-    pub access_token: Option<String>,
-    pub refresh_token: Option<String>,
-}
-
-impl TestUser {
-    pub fn new() -> Self {
-        Self {
-            email: random_email(),
-            password: "test_password_123".to_string(),
-            user_id: None,
-            device_id: None,
-            access_token: None,
-            refresh_token: None,
-        }
-    }
-
-    pub fn auth_header(&self) -> String {
-        format!("Bearer {}", self.access_token.as_ref().unwrap())
-    }
-}
-
-impl Default for TestUser {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Helper trait for test assertions
-pub trait TestAssertions {
-    fn assert_ok(&self);
-    fn assert_status(&self, expected: u16);
-}

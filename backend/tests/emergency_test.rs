@@ -257,7 +257,7 @@ async fn test_emergency_request_flow() {
 
     // Create emergency contact user
     let contact_email = random_email();
-    let contact_token = register_user(&router, &contact_email).await;
+    let _contact_token = register_user(&router, &contact_email).await;
 
     // Owner adds contact
     let add_req = auth_json_request(

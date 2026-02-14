@@ -66,7 +66,7 @@ async fn test_full_user_journey() {
         .unwrap();
     let json: Value = serde_json::from_slice(&body).unwrap();
     let access_token = json["access_token"].as_str().unwrap().to_string();
-    let device_id1 = json["device_id"].as_str().unwrap().to_string();
+    let _device_id1 = json["device_id"].as_str().unwrap().to_string();
 
     // 2. Create vault items
     let push_req = auth_json_request(
