@@ -16,7 +16,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-wasm-bindgen = "0.6"
 getrandom = { version = "0.2", features = ["js"] }
-uuid = { version = "1.0", features = ["js"] }
+uuid = { version = "1.21", features = ["js"] }
 console_error_panic_hook = "0.1"
 base64 = "0.21"
 
