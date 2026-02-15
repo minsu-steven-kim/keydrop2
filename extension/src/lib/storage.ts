@@ -35,13 +35,14 @@ const STORAGE_KEY = 'keydrop_vault';
 // Check if vault exists
 export async function vaultExists(): Promise<boolean> {
   const result = await chrome.storage.local.get(STORAGE_KEY);
-  return !!result[STORAGE_KEY]?.salt;
+  const data = result[STORAGE_KEY] as StoredData | undefined;
+  return !!data?.salt;
 }
 
 // Get stored data
 export async function getStoredData(): Promise<StoredData | null> {
   const result = await chrome.storage.local.get(STORAGE_KEY);
-  return result[STORAGE_KEY] || null;
+  return (result[STORAGE_KEY] as StoredData | undefined) || null;
 }
 
 // Save stored data

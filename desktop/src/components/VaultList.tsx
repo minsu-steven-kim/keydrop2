@@ -1,5 +1,5 @@
 import { VaultItem } from '../hooks/useTauri';
-import { writeText } from '@tauri-apps/api/clipboard';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { useState } from 'react';
 
 const icons = {

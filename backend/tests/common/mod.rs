@@ -69,7 +69,8 @@ pub async fn create_test_state(pool: PgPool) -> AppState {
 pub async fn create_test_router() -> (Router, PgPool) {
     let pool = create_test_pool().await;
     run_migrations(&pool).await;
-    cleanup_test_data(&pool).await;
+    // Note: cleanup_test_data is NOT called here because tests run concurrently
+    // and share the same database. Each test uses random_email() for isolation.
 
     let state = create_test_state(pool.clone()).await;
     let router = Router::new()

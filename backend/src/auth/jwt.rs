@@ -143,3 +143,60 @@ pub fn hash_refresh_token(token: &str) -> String {
         hasher.finalize(),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_argon2_hash_verify_cycle() {
+        use argon2::{
+            password_hash::{
+                rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
+            },
+            Argon2,
+        };
+
+        let auth_key = "dGVzdF9hdXRoX2tleQ==";
+
+        // Registration: hash the auth_key
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let auth_key_hash = argon2
+            .hash_password(auth_key.as_bytes(), &salt)
+            .expect("Failed to hash")
+            .to_string();
+
+        eprintln!("Hash: {}", auth_key_hash);
+        eprintln!("Hash length: {}", auth_key_hash.len());
+
+        // Login: parse and verify
+        let parsed_hash = PasswordHash::new(&auth_key_hash).expect("Failed to parse hash");
+
+        Argon2::default()
+            .verify_password(auth_key.as_bytes(), &parsed_hash)
+            .expect("Failed to verify");
+    }
+
+    #[test]
+    fn test_token_generation() {
+        let user_id = Uuid::new_v4();
+        let device_id = Uuid::new_v4();
+        let secret = "test_jwt_secret_key_for_testing_only";
+
+        let tokens = generate_token_pair(user_id, device_id, secret).unwrap();
+        assert!(!tokens.access_token.is_empty());
+        assert!(!tokens.refresh_token.is_empty());
+        assert!(tokens.expires_in > 0);
+
+        // Verify access token
+        let claims = validate_access_token(&tokens.access_token, secret).unwrap();
+        assert_eq!(claims.sub, user_id.to_string());
+        assert_eq!(claims.device_id, device_id.to_string());
+
+        // Verify refresh token
+        let claims = validate_refresh_token(&tokens.refresh_token, secret).unwrap();
+        assert_eq!(claims.sub, user_id.to_string());
+        assert_eq!(claims.device_id, device_id.to_string());
+    }
+}
