@@ -61,7 +61,9 @@ pub async fn create_test_state(pool: PgPool) -> AppState {
         db: pool,
         jwt_secret: "test_jwt_secret_key_for_testing_only".to_string(),
         sync_tx,
-        blob_storage: None, // No blob storage in tests
+        blob_storage: Some(std::sync::Arc::new(
+            keydrop_backend::blob::BlobStorage::in_memory(),
+        )),
     }
 }
 

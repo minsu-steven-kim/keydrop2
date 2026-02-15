@@ -76,14 +76,14 @@ async fn test_full_user_journey() {
             "base_version": 1,
             "items": [
                 {
-                    "id": "item-login-1",
+                    "id": "00000000-0000-0000-0000-000000000001",
                     "encrypted_data": "ZW5jcnlwdGVkX2xvZ2lu",
                     "version": 0,
                     "is_deleted": false,
                     "modified_at": 1704067200
                 },
                 {
-                    "id": "item-login-2",
+                    "id": "00000000-0000-0000-0000-000000000002",
                     "encrypted_data": "ZW5jcnlwdGVkX2xvZ2luXzI=",
                     "version": 0,
                     "is_deleted": false,
@@ -156,7 +156,7 @@ async fn test_full_user_journey() {
             "base_version": 2,
             "items": [
                 {
-                    "id": "item-login-1",
+                    "id": "00000000-0000-0000-0000-000000000001",
                     "encrypted_data": "dXBkYXRlZF9sb2dpbg==",
                     "version": 2,
                     "is_deleted": false,
@@ -186,7 +186,7 @@ async fn test_full_user_journey() {
     let json: Value = serde_json::from_slice(&body).unwrap();
     let items = json["items"].as_array().unwrap();
     assert_eq!(items.len(), 1);
-    assert_eq!(items[0]["id"], "item-login-1");
+    assert_eq!(items[0]["id"], "00000000-0000-0000-0000-000000000001");
 }
 
 #[tokio::test]

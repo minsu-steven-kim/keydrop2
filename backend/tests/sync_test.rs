@@ -106,7 +106,7 @@ async fn test_push_and_pull_items() {
             "base_version": 1,
             "items": [
                 {
-                    "id": "test-item-1",
+                    "id": "10000000-0000-0000-0000-000000000001",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMQ==",
                     "version": 0,
                     "is_deleted": false,
@@ -144,7 +144,7 @@ async fn test_push_and_pull_items() {
 
     let items = json["items"].as_array().unwrap();
     assert_eq!(items.len(), 1);
-    assert_eq!(items[0]["id"], "test-item-1");
+    assert_eq!(items[0]["id"], "10000000-0000-0000-0000-000000000001");
 }
 
 #[tokio::test]
@@ -161,21 +161,21 @@ async fn test_push_multiple_items() {
             "base_version": 1,
             "items": [
                 {
-                    "id": "test-item-1",
+                    "id": "10000000-0000-0000-0000-000000000001",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMQ==",
                     "version": 0,
                     "is_deleted": false,
                     "modified_at": 1704067200
                 },
                 {
-                    "id": "test-item-2",
+                    "id": "10000000-0000-0000-0000-000000000002",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMg==",
                     "version": 0,
                     "is_deleted": false,
                     "modified_at": 1704067201
                 },
                 {
-                    "id": "test-item-3",
+                    "id": "10000000-0000-0000-0000-000000000003",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMw==",
                     "version": 0,
                     "is_deleted": false,
@@ -222,7 +222,7 @@ async fn test_push_deleted_item() {
             "base_version": 1,
             "items": [
                 {
-                    "id": "test-item-1",
+                    "id": "10000000-0000-0000-0000-000000000001",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMQ==",
                     "version": 0,
                     "is_deleted": false,
@@ -250,7 +250,7 @@ async fn test_push_deleted_item() {
             "base_version": version,
             "items": [
                 {
-                    "id": "test-item-1",
+                    "id": "10000000-0000-0000-0000-000000000001",
                     "encrypted_data": "",
                     "version": version,
                     "is_deleted": true,
@@ -298,7 +298,7 @@ async fn test_pull_since_version() {
             "base_version": 1,
             "items": [
                 {
-                    "id": "test-item-1",
+                    "id": "10000000-0000-0000-0000-000000000001",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMQ==",
                     "version": 0,
                     "is_deleted": false,
@@ -324,7 +324,7 @@ async fn test_pull_since_version() {
             "base_version": version_after_first,
             "items": [
                 {
-                    "id": "test-item-2",
+                    "id": "10000000-0000-0000-0000-000000000002",
                     "encrypted_data": "ZW5jcnlwdGVkX2RhdGFfMg==",
                     "version": 0,
                     "is_deleted": false,
@@ -355,7 +355,7 @@ async fn test_pull_since_version() {
 
     let items = json["items"].as_array().unwrap();
     assert_eq!(items.len(), 1);
-    assert_eq!(items[0]["id"], "test-item-2");
+    assert_eq!(items[0]["id"], "10000000-0000-0000-0000-000000000002");
 }
 
 #[tokio::test]
@@ -408,7 +408,7 @@ async fn test_two_devices_sync() {
             "base_version": 1,
             "items": [
                 {
-                    "id": "test-item-1",
+                    "id": "10000000-0000-0000-0000-000000000001",
                     "encrypted_data": "ZnJvbV9kZXZpY2VfMQ==",
                     "version": 0,
                     "is_deleted": false,
@@ -439,5 +439,5 @@ async fn test_two_devices_sync() {
 
     let items = json["items"].as_array().unwrap();
     assert_eq!(items.len(), 1);
-    assert_eq!(items[0]["id"], "test-item-1");
+    assert_eq!(items[0]["id"], "10000000-0000-0000-0000-000000000001");
 }
